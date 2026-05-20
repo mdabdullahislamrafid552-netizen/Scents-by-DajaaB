@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { PRODUCTS } from '@/data/products';
 import { Icon, Monogram } from '@/components/Icons';
-import Bottle from '@/components/Bottle';
 
 const RECENT_ORDERS = [
   { id: 'SBD-4291', customer: 'Imani Lawson',   phone: '901·555·0107', items: 5, total: 125, status: 'ready',     when: '2 hrs ago',  bundle: 'Designer 5' },
@@ -194,7 +194,9 @@ function Dashboard() {
               return (
                 <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '22px 44px 1fr auto', gap: 10, alignItems: 'center' }}>
                   <span style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', color: 'var(--gold-deep)', fontSize: 16 }}>0{i+1}</span>
-                  <div className="bottle-frame" style={{ width: 44, height: 54 }}><Bottle {...p.visual} silk={false} /></div>
+                  <div style={{ position: 'relative', width: 44, height: 54, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
+                    <Image src={p.mainImage} alt={p.name} fill sizes="44px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                  </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--serif)', fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                     <div style={{ fontSize: 11, color: 'var(--mute)' }}>{t.units} units</div>
@@ -267,7 +269,9 @@ function ProductsPanel() {
                 <tr key={p.id} style={{ borderTop: '1px solid var(--line-soft)' }}>
                   <td style={{ padding: '12px 20px' }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                      <div className="bottle-frame" style={{ width: 36, height: 44, flexShrink: 0 }}><Bottle {...p.visual} silk={false} /></div>
+                      <div style={{ position: 'relative', width: 36, height: 44, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
+                        <Image src={p.mainImage} alt={p.name} fill sizes="36px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                      </div>
                       <div><div style={{ fontFamily: 'var(--serif)', fontSize: 15, whiteSpace: 'nowrap' }}>{p.name}</div><div style={{ fontSize: 11, color: 'var(--mute)' }}>{p.brand}</div></div>
                     </div>
                   </td>

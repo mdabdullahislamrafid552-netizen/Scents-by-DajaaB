@@ -1,17 +1,17 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { PRODUCTS } from '@/data/products';
 import { Icon } from '@/components/Icons';
-import Bottle from '@/components/Bottle';
 
 export default function AboutPage() {
   const router = useRouter();
   const ed = PRODUCTS.find(p => p.slug === 'creed-aventus')!;
   return (
     <div className="fade-in">
-      <section style={{ padding: '80px 0 60px' }}>
+      <section style={{ padding: 'clamp(48px, 8vw, 80px) 0 clamp(40px, 6vw, 60px)' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 80, alignItems: 'center' }}>
+          <div className="about-hero-grid">
             <div>
               <div className="kicker-mark">About the House</div>
               <h1 style={{ marginTop: 28 }}>
@@ -21,13 +21,21 @@ export default function AboutPage() {
               <p style={{ marginTop: 28, fontSize: 17, lineHeight: 1.7, color: 'var(--char)', maxWidth: 540 }}>
                 Forty-six fragrances. Every one personally vetted, sourced through authorized channels, and kept in a climate-controlled studio off Poplar. No website algorithm picked these bottles. Dajaa did.
               </p>
-              <div style={{ display: 'flex', gap: 14, marginTop: 36 }}>
+              <div style={{ display: 'flex', gap: 14, marginTop: 36, flexWrap: 'wrap' }}>
                 <a href="tel:9019212322" className="btn btn--primary"><Icon.Phone /> Book a private fitting</a>
                 <a href="https://instagram.com" className="btn btn--ghost"><Icon.IG /> @scentsbydajaab</a>
               </div>
             </div>
-            <div className="bottle-frame bottle-frame--ink" style={{ aspectRatio: '4/5' }}>
-              <Bottle {...ed.visual} ink={true} brand="MEMPHIS · TN" />
+            <div style={{ position: 'relative', aspectRatio: '4/5', overflow: 'hidden', background: '#0e0e0e' }}>
+              <Image
+                src={ed.mainImage}
+                alt={ed.name}
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 45vw"
+                style={{ objectFit: 'cover', objectPosition: 'center' }}
+              />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.5) 100%)', zIndex: 1 }} />
               <div style={{ position: 'absolute', left: 24, bottom: 24, zIndex: 2, color: 'var(--gold)', fontFamily: 'var(--script)', fontSize: 48, lineHeight: 1 }}>Sd.</div>
             </div>
           </div>
@@ -50,7 +58,7 @@ export default function AboutPage() {
         <div className="container">
           <div className="kicker-mark">What we stand on</div>
           <h2 style={{ marginTop: 18, maxWidth: 720 }}>Four <span className="italic">non-negotiables.</span></h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32, marginTop: 56 }}>
+          <div className="about-pillars-grid" style={{ marginTop: 56 }}>
             {[
               { n: '01', t: 'Authentic only', d: "Every bottle sourced through authorized distributors. Batch codes verified. We don't carry decants, dupes, or grey market." },
               { n: '02', t: 'Hand-curated', d: 'Forty-six bottles, on purpose. Dajaa tests, lives in, and signs off on every fragrance before it joins the shelf.' },
@@ -67,9 +75,9 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section style={{ background: 'var(--beige)', padding: '100px 0' }}>
+      <section style={{ background: 'var(--beige)', padding: 'clamp(56px, 8vw, 100px) 0' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+          <div className="about-studio-grid">
             <div>
               <div className="eyebrow eyebrow--gold">The Studio</div>
               <h2 style={{ marginTop: 16 }}>A back-room boutique, by <span className="italic">appointment.</span></h2>
@@ -121,7 +129,7 @@ export default function AboutPage() {
 
       <section className="section">
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 40 }}>
+          <div className="about-stats-grid">
             {[['46','Premium scents'],['13','Niche & luxury'],['3yr','Curated since'],['1','Owner. That\'s it.']].map(([n,l]) => (
               <div key={l} style={{ borderTop: '1px solid var(--ink)', paddingTop: 24 }}>
                 <div style={{ fontFamily: 'var(--serif)', fontSize: 88, lineHeight: 0.9, fontWeight: 500 }}>{n}</div>

@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { PRODUCTS } from '@/data/products';
 import { Icon } from '@/components/Icons';
-import Bottle from '@/components/Bottle';
 import { useCart } from '@/context/CartContext';
 
 export default function CheckoutPage() {
@@ -125,7 +125,9 @@ export default function CheckoutPage() {
                 <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column' }}>
                   {items.map(({ p, qty }) => (
                     <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '48px 1fr auto', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--line-soft)' }}>
-                      <div className="bottle-frame" style={{ width: 48, height: 60 }}><Bottle {...p.visual} silk={false} /></div>
+                      <div style={{ position: 'relative', width: 48, height: 60, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
+                        <Image src={p.mainImage} alt={p.name} fill sizes="48px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                      </div>
                       <div>
                         <div className="eyebrow" style={{ fontSize: 10 }}>{p.brand} · ×{qty}</div>
                         <div style={{ fontFamily: 'var(--serif)', fontSize: 15 }}>{p.name}</div>

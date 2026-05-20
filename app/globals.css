@@ -304,11 +304,15 @@ input, textarea, select, .field, .field--boxed { font-size: 16px; }
 }
 
 /* ── Shop layout ── */
-.shop-layout { display: grid; grid-template-columns: 260px 1fr; gap: 48px; }
+.shop-layout { display: flex; gap: 48px; align-items: flex-start; }
+.shop-sidebar {
+  width: 260px; flex-shrink: 0;
+  position: sticky; top: 100px;
+  max-height: calc(100vh - 120px); overflow-y: auto;
+}
 @media (max-width: 768px) {
-  .shop-layout { grid-template-columns: 1fr !important; gap: 0 !important; }
-  .shop-sidebar { display: none; }
-  .shop-sidebar.open { display: block !important; }
+  .shop-layout { display: block !important; }
+  .shop-sidebar { display: none !important; width: auto !important; position: static !important; }
 }
 /* Mobile filter panel */
 .mobile-filter-panel {
@@ -443,4 +447,73 @@ input, textarea, select, .field, .field--boxed { font-size: 16px; }
     overflow: hidden !important; text-overflow: ellipsis !important;
     white-space: nowrap !important; display: block !important; max-width: 100%;
   }
+}
+
+/* ── Smooth scroll ── */
+html { scroll-behavior: smooth; }
+
+/* ── Image loading skeleton ── */
+.img-skeleton {
+  background: linear-gradient(90deg, var(--cream-2) 25%, var(--beige) 50%, var(--cream-2) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ── Hover effects ── */
+.btn--primary:active { transform: scale(0.98); }
+.btn--ghost:active   { transform: scale(0.98); }
+.btn--gold:active    { transform: scale(0.98); }
+.linklink:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+
+/* ── No-overflow guard — belt-and-suspenders ── */
+section, .container, .container--narrow { max-width: 100%; }
+
+/* ── Shop bundle bar mobile ── */
+@media (max-width: 480px) {
+  .shop-bundle-bar { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
+}
+
+/* ── Product detail mobile tweaks ── */
+@media (max-width: 480px) {
+  .product-detail-grid { gap: 20px !important; }
+}
+
+/* ── Checkout mobile ── */
+@media (max-width: 400px) {
+  .checkout-grid { padding: 0 !important; }
+}
+
+/* ── Admin table horizontal scroll ── */
+.admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ── Footer script word-break ── */
+.footer-script { word-break: break-word; }
+
+/* ── About page ── */
+.about-hero-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 80px; align-items: center; }
+.about-pillars-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+.about-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; }
+.about-studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+@media (max-width: 1024px) {
+  .about-pillars-grid { grid-template-columns: repeat(2, 1fr); }
+  .about-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .about-hero-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .about-pillars-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .about-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
+  .about-studio-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+}
+
+/* ── FAQ page ── */
+.faq-layout { display: grid; grid-template-columns: 260px 1fr; gap: 64px; }
+.faq-layout > aside { position: sticky; top: 100px; align-self: start; max-height: calc(100vh - 120px); overflow-y: auto; }
+@media (max-width: 768px) {
+  .faq-layout { grid-template-columns: 1fr !important; gap: 0 !important; }
+  .faq-layout > aside { display: none !important; }
 }

@@ -16,7 +16,7 @@ export default function Header({ cartCount, openCart, openSearch }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const links: [string, string][] = [
-    ["/", "Home"], ["/shop", "Shop"], ["/bundles", "Bundles"], ["/about", "About"], ["/about", "Contact"],
+    ["/", "Home"], ["/shop", "Shop"], ["/bundles", "Bundles"], ["/about", "About"], ["/faq", "FAQ"],
   ];
 
   const isActive = (href: string) => {

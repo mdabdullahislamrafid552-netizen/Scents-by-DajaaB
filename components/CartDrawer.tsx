@@ -1,8 +1,8 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { PRODUCTS } from '@/data/products';
 import { Icon, Monogram } from './Icons';
-import Bottle from './Bottle';
 
 interface CartItem { id: string; qty: number; }
 interface Props {
@@ -98,8 +98,8 @@ export default function CartDrawer({ open, onClose, cart, setCart }: Props) {
           )}
           {items.map(({ p, qty }) => (
             <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '72px 1fr auto', gap: 16, padding: '16px 0', borderBottom: '1px solid var(--line-soft)' }}>
-              <div className="bottle-frame" style={{ width: 72, height: 90 }}>
-                <Bottle {...p.visual} brand="" silk={false} />
+              <div style={{ position: 'relative', width: 72, height: 90, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
+                <Image src={p.mainImage} alt={p.name} fill sizes="72px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
               </div>
               <div>
                 <div className="eyebrow" style={{ marginBottom: 4 }}>{p.brand}</div>

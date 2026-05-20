@@ -128,12 +128,12 @@ function ShopContent() {
         <div className="container">
           <div className="shop-layout">
             {/* Desktop sidebar */}
-            <aside className="shop-sidebar desktop-only" style={{ display: 'block' }}>
+            <aside className="shop-sidebar">
               {FilterContent}
             </aside>
 
             {/* Product grid */}
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               {filtered.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--mute)' }}>
                   <h3>No bottles match those filters.</h3>

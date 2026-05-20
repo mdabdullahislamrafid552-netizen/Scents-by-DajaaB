@@ -39,7 +39,7 @@ export default function FAQPage() {
         </div>
       </section>
       <section style={{ padding: '40px 0 100px' }}>
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 64 }}>
+        <div className="container faq-layout">
           <aside>
             <div className="eyebrow eyebrow--ink" style={{ marginBottom: 12 }}>Topics</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
