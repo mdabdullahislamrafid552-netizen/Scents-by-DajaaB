@@ -116,7 +116,6 @@ export default function ProductPage() {
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className={`chip ${p.tier === 'niche' ? 'chip--solid-gold' : 'chip--solid-ink'}`}>{TIERS[p.tier].label}</span>
                 <span className="chip" style={{ color: 'var(--mute)', borderColor: 'var(--line)' }}>{p.gender === 'unisex' ? 'Unisex' : p.gender === 'women' ? 'Women' : 'Men'}</span>
-                <span className="chip" style={{ color: 'var(--mute)', borderColor: 'var(--line)' }}>{p.family}</span>
               </div>
               <div className="eyebrow eyebrow--gold" style={{ marginTop: 20 }}>{p.brand}</div>
               <h1 style={{ fontSize: 'clamp(36px, 5vw, 76px)', marginTop: 8, lineHeight: 1 }}>

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PRODUCTS, BRANDS, SCENT_FAMILIES } from '@/data/products';
+import { PRODUCTS, BRANDS } from '@/data/products';
 import { Icon } from '@/components/Icons';
 import ProductCard from '@/components/ProductCard';
 import { useCart } from '@/context/CartContext';
@@ -17,7 +17,6 @@ function ShopContent() {
     tier: searchParams.get('tier') ? [searchParams.get('tier')!] : [],
     gender: [] as string[],
     brand: [] as string[],
-    family: searchParams.get('family') ? [searchParams.get('family')!] : [],
     priceMax: 300,
   });
   const [sort, setSort] = useState('featured');
@@ -26,14 +25,13 @@ function ShopContent() {
     ...f,
     [key]: (f as any)[key].includes(val) ? (f as any)[key].filter((x: string) => x !== val) : [...(f as any)[key], val],
   }));
-  const clearAll = () => setFilters({ tier: [], gender: [], brand: [], family: [], priceMax: 300 });
+  const clearAll = () => setFilters({ tier: [], gender: [], brand: [], priceMax: 300 });
 
   const filtered = useMemo(() => {
     let res = PRODUCTS.filter(p => {
       if (filters.tier.length && !filters.tier.includes(p.tier)) return false;
       if (filters.gender.length && !filters.gender.includes(p.gender)) return false;
       if (filters.brand.length && !filters.brand.includes(p.brand)) return false;
-      if (filters.family.length && !filters.family.includes(p.family)) return false;
       if (p.price > filters.priceMax) return false;
       return true;
     });
@@ -44,7 +42,7 @@ function ShopContent() {
     return res;
   }, [filters, sort]);
 
-  const activeCount = filters.tier.length + filters.gender.length + filters.brand.length + filters.family.length + (filters.priceMax < 300 ? 1 : 0);
+  const activeCount = filters.tier.length + filters.gender.length + filters.brand.length + (filters.priceMax < 300 ? 1 : 0);
 
   const FilterContent = (
     <>
@@ -60,8 +58,6 @@ function ShopContent() {
         active={filters.tier} onToggle={v => toggle('tier', v)} />
       <FilterGroup title="For" items={[['women','Women'],['men','Men'],['unisex','Unisex']]}
         active={filters.gender} onToggle={v => toggle('gender', v)} />
-      <FilterGroup title="Scent Family" items={SCENT_FAMILIES.map(f => [f, f])}
-        active={filters.family} onToggle={v => toggle('family', v)} />
       <FilterGroup title="House" items={BRANDS.map(b => [b, b])}
         active={filters.brand} onToggle={v => toggle('brand', v)} collapsed />
       <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid var(--line)' }}>

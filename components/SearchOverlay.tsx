@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { PRODUCTS } from '@/data/products';
 import { Icon, Wordmark } from './Icons';
-import Bottle from './Bottle';
 
 interface Props { open: boolean; onClose: () => void; }
 
@@ -19,7 +19,6 @@ export default function SearchOverlay({ open, onClose }: Props) {
     ? PRODUCTS.filter(p =>
         p.name.toLowerCase().includes(ql) ||
         p.brand.toLowerCase().includes(ql) ||
-        p.family.toLowerCase().includes(ql) ||
         [...p.notes.top, ...p.notes.middle, ...p.notes.base].some(n => n.toLowerCase().includes(ql))
       ).slice(0, 8)
     : [];
@@ -66,8 +65,8 @@ export default function SearchOverlay({ open, onClose }: Props) {
                 {results.map(p => (
                   <a key={p.id} onClick={() => { onClose(); router.push(`/product/${p.slug}`); }}
                      style={{ display: 'grid', gridTemplateColumns: '60px 1fr auto', gap: 16, alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--line-soft)', cursor: 'pointer' }}>
-                    <div className="bottle-frame" style={{ width: 60, height: 80 }}>
-                      <Bottle {...p.visual} silk={false} />
+                    <div style={{ position: 'relative', width: 60, height: 80, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
+                      <Image src={p.mainImage} alt={p.name} fill sizes="60px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
                     </div>
                     <div>
                       <div className="eyebrow">{p.brand}</div>

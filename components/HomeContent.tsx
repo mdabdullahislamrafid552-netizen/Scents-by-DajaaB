@@ -150,7 +150,6 @@ export default function HomeContent() {
                   <div className="eyebrow" style={{ color: 'var(--gold)', fontSize: 10 }}>{p.brand}</div>
                   <div className="product-card__name" style={{ fontFamily: 'var(--serif)', fontSize: 18, marginTop: 4, color: 'var(--cream)', lineHeight: 1.15 }}>{p.name}</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                    <span style={{ fontSize: 11, color: 'rgba(250,246,236,0.55)' }}>{p.family}</span>
                     <span style={{ fontFamily: 'var(--serif)', fontSize: 18, color: 'var(--cream)' }}>${p.price}</span>
                   </div>
                   <button onClick={e => { e.stopPropagation(); addToCart(p.id); }} className="btn"
@@ -187,7 +186,7 @@ export default function HomeContent() {
               onClick={() => router.push('/bundles')} dark />
           </div>
           <div style={{ marginTop: 16, textAlign: 'center', color: 'var(--char)' }}>
-            <span className="eyebrow">Auto-applied in your bag · Mix tier · Mix gender · Mix scent family</span>
+            <span className="eyebrow">Auto-applied in your bag · Mix tier · Mix gender</span>
           </div>
         </div>
       </section>

@@ -62,7 +62,7 @@ export default function ProductCard({ p, addToCart }: Props) {
         }}>{p.name}</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, gap: 8 }}>
           <span style={{ color: 'var(--mute)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {p.family} · {p.gender === 'unisex' ? 'Unisex' : p.gender === 'women' ? 'Women' : 'Men'}
+            {p.gender === 'unisex' ? 'Unisex' : p.gender === 'women' ? 'Women' : 'Men'}
           </span>
           <span className="product-card__price" style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(15px, 3vw, 18px)', fontWeight: 500, flexShrink: 0 }}>${p.price}</span>
         </div>
