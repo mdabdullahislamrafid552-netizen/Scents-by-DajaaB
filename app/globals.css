@@ -425,6 +425,12 @@ input, textarea, select, .field, .field--boxed { font-size: 16px; }
 /* Table horizontal scroll on all screen sizes */
 .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
+/* Sidebar close button: hidden on desktop (sidebar always visible), shown when drawer is open */
+.admin-topbar-close { display: none !important; }
+@media (max-width: 1024px) {
+  .admin-topbar-close { display: flex !important; }
+}
+
 /* ── Section spacing ── */
 @media (max-width: 768px) {
   .section { padding: 48px 0 !important; }
