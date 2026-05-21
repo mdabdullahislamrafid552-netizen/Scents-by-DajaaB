@@ -81,7 +81,7 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="admin-layout" style={{ background: '#f6f2e6' }}>
+    <div className="admin-layout">
       {/* ── Sidebar backdrop (mobile) ── */}
       <div className={`admin-sidebar-backdrop ${sidebarOpen ? 'open' : ''}`}
            onClick={() => setSidebarOpen(false)} />
@@ -93,11 +93,8 @@ export default function AdminPage() {
 
       {/* ── Main content ── */}
       <main className="admin-main" style={{ padding: 40, overflow: 'hidden', minWidth: 0 }}>
-        {/* Mobile top bar */}
-        <div className="mobile-only" style={{
-          alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: 24, padding: '12px 0', borderBottom: '1px solid var(--line)',
-        }}>
+        {/* Hamburger top bar — only visible below 1024px via .admin-topbar class */}
+        <div className="admin-topbar">
           <button onClick={() => setSidebarOpen(true)}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44 }}>
             <Icon.Menu />
