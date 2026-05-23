@@ -66,7 +66,7 @@ export default function Header({ cartCount, openCart, openSearch }: Props) {
           <a onClick={() => router.push('/')} style={{ cursor: 'pointer', justifySelf: 'center', display: 'flex', alignItems: 'center' }}>
             <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
               className="site-logo"
-              style={{ height: 52, width: 'auto', objectFit: 'contain', display: 'block' }}
+              style={{ height: 64, width: 'auto', objectFit: 'contain', display: 'block' }}
               priority />
           </a>
 
@@ -126,7 +126,7 @@ export default function Header({ cartCount, openCart, openSearch }: Props) {
           padding: '16px 24px', borderBottom: '1px solid var(--line)',
         }}>
           <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
-            style={{ height: 44, width: 'auto', objectFit: 'contain', display: 'block' }} />
+            style={{ height: 48, width: 'auto', objectFit: 'contain', display: 'block' }} />
           <button onClick={() => setMenuOpen(false)} aria-label="Close menu"
                   style={{ padding: 8, minHeight: 44, minWidth: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon.Close />
