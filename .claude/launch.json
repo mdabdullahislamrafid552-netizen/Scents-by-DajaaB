@@ -1,16 +1,10 @@
-{
+﻿{
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "Next.js Dev Server",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/rafid/Desktop/Scents_By_DajaaB/scents-app/node_modules/next/dist/bin/next", "dev", "C:/Users/rafid/Desktop/Scents_By_DajaaB/scents-app"],
-      "port": 3000
-    },
-    {
-      "name": "Next.js Production Server",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/rafid/Desktop/Scents_By_DajaaB/scents-app/node_modules/next/dist/bin/next", "start", "--cwd", "C:/Users/rafid/Desktop/Scents_By_DajaaB/scents-app"],
+      "name": "scents-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
       "port": 3000
     }
   ]
