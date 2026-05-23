@@ -249,9 +249,9 @@ input, textarea, select, .field, .field--boxed { font-size: 16px; }
 }
 
 /* ── Header ── */
-.header-inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px 32px; gap: 24px; }
+.header-inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 16px 32px; gap: 24px; }
 @media (max-width: 768px) {
-  .header-inner { grid-template-columns: 1fr auto 1fr; padding: 12px 16px; gap: 12px; }
+  .header-inner { grid-template-columns: 1fr auto 1fr; padding: 14px 16px; gap: 12px; }
 }
 
 /* ── Mobile nav drawer ── */
@@ -535,6 +535,14 @@ section, .container, .container--narrow { max-width: 100%; }
 
 /* ── Footer script word-break ── */
 .footer-script { word-break: break-word; }
+
+/* ── Site logo image ── */
+/* Height/width driven by inline style on each usage; class adds overflow safety */
+.site-logo         { display: block !important; overflow: visible !important; max-width: none !important; }
+.site-logo--footer { display: block !important; overflow: visible !important; max-width: none !important; }
+/* Ensure header doesn't clip the logo */
+.header-inner      { overflow: visible !important; }
+.header            { overflow: visible !important; }
 
 /* ── About page ── */
 .about-hero-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 80px; align-items: center; }

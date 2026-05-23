@@ -7,10 +7,10 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    // Allow all local images from public/products and its subfolders
+    // Allow all local public images — products, logo, and any root-level assets
     localPatterns: [
-      { pathname: '/products/**' },
-      { pathname: '/file.svg' },    // fallback placeholder
+      { pathname: '/products/**' },   // product images
+      { pathname: '/**' },            // logo.png + any other root-level public files
     ],
   },
 };

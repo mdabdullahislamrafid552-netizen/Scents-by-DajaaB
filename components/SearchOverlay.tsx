@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { PRODUCTS } from '@/data/products';
-import { Icon, Wordmark } from './Icons';
+import { Icon } from './Icons';
 
 interface Props { open: boolean; onClose: () => void; }
 
@@ -29,7 +29,8 @@ export default function SearchOverlay({ open, onClose }: Props) {
     <div className={`search-overlay ${open ? 'open' : ''}`}>
       <div className="container" style={{ paddingTop: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Wordmark size={32} />
+          <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
+            style={{ height: 44, width: 'auto', objectFit: 'contain', display: 'block' }} />
           <button onClick={onClose}><Icon.Close /></button>
         </div>
         <div style={{ marginTop: 80, maxWidth: 800, margin: '80px auto 0' }}>

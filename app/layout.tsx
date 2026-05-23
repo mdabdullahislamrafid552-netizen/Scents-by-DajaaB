@@ -5,6 +5,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Scents by DajaaB · All Premium Scents · Memphis",
   description: "Luxury fragrance reseller in Memphis, TN. Hand-curated Creed, Maison Francis Kurkdjian, Tom Ford, Clive Christian, and house designers — pickup only.",
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

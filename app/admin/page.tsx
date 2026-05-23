@@ -3,7 +3,7 @@ import { useState, useReducer, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { PRODUCTS as STATIC_PRODUCTS, Product, SCENT_FAMILIES, BRANDS } from '@/data/products';
-import { Icon, Monogram } from '@/components/Icons';
+import { Icon } from '@/components/Icons';
 
 /* ═══════════════════════════════════════════════════════════════
    TYPES
@@ -313,10 +313,10 @@ export default function AdminPage() {
   const SidebarContent = (
     <>
       <div style={{ display:'flex',alignItems:'center',gap:12,paddingBottom:24,borderBottom:'1px solid rgba(201,169,97,0.2)' }}>
-        <Monogram size={36}/>
-        <div>
-          <div style={{ fontFamily:'var(--serif)',fontSize:18,color:'var(--cream)' }}>Scents by DajaaB</div>
-          <div className="eyebrow" style={{ color:'var(--gold)',fontSize:9 }}>Studio Admin</div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
+            style={{ height:36, width:'auto', objectFit:'contain', display:'block' }} />
+          <div className="eyebrow" style={{ color:'var(--gold)',fontSize:9,marginTop:4 }}>Studio Admin</div>
         </div>
         <button onClick={()=>setSidebarOpen(false)} className="admin-topbar-close"
                 style={{ marginLeft:'auto',color:'var(--cream)',minHeight:44,minWidth:44,display:'flex',alignItems:'center',justifyContent:'center' }}>
@@ -363,7 +363,8 @@ export default function AdminPage() {
             <Icon.Menu/>
             <span style={{ fontFamily:'var(--serif)',fontSize:18 }}>{tabs.find(([k])=>k===tab)?.[1]??'Admin'}</span>
           </button>
-          <Monogram size={28}/>
+          <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
+            style={{ height:34, width:'auto', objectFit:'contain' }} />
         </div>
         {tab==='dashboard' && <Dashboard {...sharedProps}/>}
         {tab==='orders'    && <OrdersPanel {...sharedProps}/>}

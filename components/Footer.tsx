@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Icon, Wordmark } from './Icons';
+import Image from 'next/image';
+import { Icon } from './Icons';
 
 export default function Footer() {
   const router = useRouter();
@@ -15,15 +16,9 @@ export default function Footer() {
       <div className="container">
         {/* Logo + tagline */}
         <div style={{ textAlign: 'center', paddingBottom: 48 }}>
-          <div className="eyebrow" style={{ color: 'var(--gold)', marginBottom: 16 }}>✦ All Premium Scents ✦</div>
-          <div className="footer-script" style={{
-            fontFamily: 'var(--script)',
-            fontSize: 'clamp(52px, 9vw, 140px)',
-            lineHeight: 0.9,
-            color: 'var(--gold)',
-          }}>
-            Scents by DajaaB
-          </div>
+          <div className="eyebrow" style={{ color: 'var(--gold)', marginBottom: 24 }}>✦ All Premium Scents ✦</div>
+          <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
+            style={{ height: 80, width: 'auto', objectFit: 'contain', display: 'inline-block' }} />
         </div>
 
         <div style={{ height: 1, background: 'rgba(201,169,97,0.25)' }} />

@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import AnnouncementBar from './AnnouncementBar';
-import { Icon, Wordmark } from './Icons';
+import { Icon } from './Icons';
 
 interface Props {
   cartCount: number;
@@ -63,7 +64,10 @@ export default function Header({ cartCount, openCart, openSearch }: Props) {
 
           {/* Center: logo */}
           <a onClick={() => router.push('/')} style={{ cursor: 'pointer', justifySelf: 'center', display: 'flex', alignItems: 'center' }}>
-            <Wordmark size={26} />
+            <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
+              className="site-logo"
+              style={{ height: 52, width: 'auto', objectFit: 'contain', display: 'block' }}
+              priority />
           </a>
 
           {/* Right: search, account, cart */}
@@ -121,7 +125,8 @@ export default function Header({ cartCount, openCart, openSearch }: Props) {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '16px 24px', borderBottom: '1px solid var(--line)',
         }}>
-          <Wordmark size={24} />
+          <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
+            style={{ height: 44, width: 'auto', objectFit: 'contain', display: 'block' }} />
           <button onClick={() => setMenuOpen(false)} aria-label="Close menu"
                   style={{ padding: 8, minHeight: 44, minWidth: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon.Close />
