@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import ProductImage from '@/components/ProductImage';
 import { PRODUCTS } from '@/data/products';
 import { Icon } from '@/components/Icons';
 import ProductCard from '@/components/ProductCard';
@@ -130,13 +131,13 @@ export default function HomeContent() {
             {niche.map(p => (
               <a key={p.id} onClick={() => router.push(`/product/${p.slug}`)} className="product-card" style={{ color: 'var(--cream)', cursor: 'pointer' }}>
                 <div className="product-card__media" style={{ position: 'relative', aspectRatio: '4/5', overflow: 'hidden', background: '#0e0e0e', border: '1px solid rgba(201,169,97,0.25)' }}>
-                  <Image
+                  <ProductImage
                     src={p.mainImage}
                     alt={p.name}
                     fill
                     loading="lazy"
                     sizes="(max-width: 768px) 50vw, 25vw"
-                    style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    dark
                   />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.5) 100%)', zIndex: 1 }} />
                   <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 2 }}>

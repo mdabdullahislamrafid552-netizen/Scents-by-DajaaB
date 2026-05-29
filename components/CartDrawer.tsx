@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import ProductImage from '@/components/ProductImage';
 import { PRODUCTS } from '@/data/products';
 import { Icon, Monogram } from './Icons';
 
@@ -99,7 +99,7 @@ export default function CartDrawer({ open, onClose, cart, setCart }: Props) {
           {items.map(({ p, qty }) => (
             <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '72px 1fr auto', gap: 16, padding: '16px 0', borderBottom: '1px solid var(--line-soft)' }}>
               <div style={{ position: 'relative', width: 72, height: 90, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
-                <Image src={p.mainImage} alt={p.name} fill sizes="72px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                <ProductImage src={p.mainImage} alt={p.name} fill sizes="72px" dark={p.tier === 'niche'} />
               </div>
               <div>
                 <div className="eyebrow" style={{ marginBottom: 4 }}>{p.brand}</div>

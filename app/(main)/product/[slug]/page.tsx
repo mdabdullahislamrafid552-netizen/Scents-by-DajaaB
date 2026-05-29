@@ -1,13 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Image from 'next/image';
+import ProductImage from '@/components/ProductImage';
 import { PRODUCTS, TIERS } from '@/data/products';
 import { Icon } from '@/components/Icons';
 import ProductCard from '@/components/ProductCard';
 import { useCart } from '@/context/CartContext';
-
-const FALLBACK = '/file.svg';
 
 export default function ProductPage() {
   const params   = useParams();
@@ -57,15 +55,16 @@ export default function ProductPage() {
             {/* ── Gallery ── */}
             <div>
               {/* Main image */}
-              <div style={{ position: 'relative', aspectRatio: '4/5', overflow: 'hidden', background: 'var(--cream-2)' }}>
-                <Image
+              <div style={{ position: 'relative', aspectRatio: '4/5', overflow: 'hidden', background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
+                <ProductImage
                   key={gallery[activeImage]}
-                  src={imgErrors[activeImage] ? FALLBACK : gallery[activeImage]}
+                  src={imgErrors[activeImage] ? '' : gallery[activeImage]}
                   alt={`${p.name} by ${p.brand} — view ${activeImage + 1}`}
                   fill priority
                   sizes="(max-width: 768px) 100vw, 55vw"
                   style={{ objectFit: 'cover', objectPosition: 'center', transition: 'opacity 0.3s ease' }}
                   onError={() => handleImgError(activeImage)}
+                  dark={p.tier === 'niche'}
                 />
                 {p.tier === 'niche' && (
                   <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 2 }}>
@@ -98,12 +97,12 @@ export default function ProductPage() {
                     <button key={i} onClick={() => setActiveImage(i)}
                       style={{ position: 'relative', aspectRatio: '1/1', padding: 0, border: i === activeImage ? '2px solid var(--ink)' : '1px solid var(--line)', cursor: 'pointer', overflow: 'hidden', background: 'var(--cream-2)' }}
                       aria-label={`View image ${i + 1}`}>
-                      <Image
-                        src={imgErrors[i] ? FALLBACK : src}
+                      <ProductImage
+                        src={imgErrors[i] ? '' : src}
                         alt={`${p.name} thumbnail ${i + 1}`}
                         fill sizes="15vw"
-                        style={{ objectFit: 'cover', objectPosition: 'center' }}
                         onError={() => handleImgError(i)}
+                        dark={p.tier === 'niche'}
                       />
                     </button>
                   ))}

@@ -1,10 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import ProductImage from '@/components/ProductImage';
 import { Product } from '@/data/products';
-
-const FALLBACK = '/file.svg';
 
 interface Props {
   p: Product;
@@ -14,22 +12,21 @@ interface Props {
 export default function ProductCard({ p, addToCart }: Props) {
   const router = useRouter();
   const go = () => router.push(`/product/${p.slug}`);
-  const [imgError, setImgError] = useState(false);
 
   return (
     <div className="product-card">
       <div onClick={go} className="product-card__media" style={{
         position: 'relative', aspectRatio: '4/5', cursor: 'pointer', overflow: 'hidden',
-        background: 'var(--cream-2)',
+        background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)',
       }}>
-        <Image
-          src={imgError ? FALLBACK : p.mainImage}
+        <ProductImage
+          src={p.mainImage}
           alt={`${p.name} by ${p.brand}`}
           fill
           loading="lazy"
           sizes="(max-width: 768px) 50vw, 25vw"
           style={{ objectFit: 'cover', objectPosition: 'center' }}
-          onError={() => setImgError(true)}
+          dark={p.tier === 'niche'}
         />
         {p.tier === 'niche' && (
           <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 2 }}>

@@ -1,17 +1,51 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import ProductImage from '@/components/ProductImage';
 import { PRODUCTS } from '@/data/products';
 import { Icon } from '@/components/Icons';
 import { useCart } from '@/context/CartContext';
+
+const ADDR_KEY = 'sbd-saved-address';
+
+type GiftDeliverTo = 'friend' | 'me';
+
+interface FormState {
+  name: string; email: string; phone: string;
+  address: string; city: string; zip: string;
+  window: string; notes: string; payment: string;
+  isGift: boolean;
+  giftDeliverTo: GiftDeliverTo;
+  recipientName: string; recipientPhone: string;
+  recipientAddress: string; recipientCity: string; recipientZip: string;
+}
+
+const BLANK: FormState = {
+  name: '', email: '', phone: '',
+  address: '', city: '', zip: '',
+  window: 'saturday-pm', notes: '', payment: 'zelle',
+  isGift: false, giftDeliverTo: 'friend',
+  recipientName: '', recipientPhone: '',
+  recipientAddress: '', recipientCity: '', recipientZip: '',
+};
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, setCart } = useCart();
   const [step, setStep] = useState(cart.length === 0 ? 'empty' : 'details');
-  const [form, setForm] = useState({ name: '', email: '', phone: '', window: 'saturday-pm', notes: '', payment: 'zelle' });
+  const [form, setForm] = useState<FormState>(BLANK);
   const [confirmed, setConfirmed] = useState<any>(null);
+
+  /* load saved address on mount */
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(ADDR_KEY);
+      if (saved) {
+        const a = JSON.parse(saved);
+        setForm(f => ({ ...f, name: a.name||'', email: a.email||'', phone: a.phone||'', address: a.address||'', city: a.city||'', zip: a.zip||'' }));
+      }
+    } catch {}
+  }, []);
 
   const items = cart.map(c => ({ ...c, p: PRODUCTS.find(p => p.id === c.id) })).filter(x => x.p) as { id: string; qty: number; p: typeof PRODUCTS[0] }[];
   const subtotal = items.reduce((s, it) => s + it.p.price * it.qty, 0);
@@ -35,8 +69,14 @@ export default function CheckoutPage() {
   }
   const total = subtotal - bundleDiscount;
 
+  const set = (k: keyof FormState, v: unknown) => setForm(f => ({ ...f, [k]: v }));
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+    /* persist address for next visit */
+    try {
+      localStorage.setItem(ADDR_KEY, JSON.stringify({ name: form.name, email: form.email, phone: form.phone, address: form.address, city: form.city, zip: form.zip }));
+    } catch {}
     const orderNum = 'SBD-' + Math.floor(Math.random() * 9000 + 1000);
     setConfirmed({ num: orderNum, ...form, items: [...items], subtotal, bundleDiscount, total });
     setCart([]);
@@ -70,19 +110,110 @@ export default function CheckoutPage() {
                 We hold your bottles for 48 hours. Dajaa will confirm by text within 2 hours and share the studio address + pickup window. Pay on pickup — cash, Zelle, or Apple Pay.
               </p>
               <form onSubmit={submit} style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+                {/* ── 01 Your details ── */}
                 <CSection title="Your details" num="01">
                   <div className="checkout-form-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                    <Field label="Full name" required value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} placeholder="Dajaa Bowen" />
-                    <Field label="Phone (we text)" required value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} placeholder="901·555·0123" type="tel" />
+                    <Field label="Full name" required value={form.name} onChange={v => set('name', v)} placeholder="Dajaa Bowen" />
+                    <Field label="Phone (we text)" required value={form.phone} onChange={v => set('phone', v)} placeholder="901·555·0123" type="tel" />
                   </div>
-                  <Field label="Email (order receipt)" required value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))} placeholder="you@example.com" type="email" />
+                  <Field label="Email (order receipt)" required value={form.email} onChange={v => set('email', v)} placeholder="you@example.com" type="email" />
+                  <Field label="Street address" value={form.address} onChange={v => set('address', v)} placeholder="123 Poplar Ave" />
+                  <div className="checkout-form-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                    <Field label="City" value={form.city} onChange={v => set('city', v)} placeholder="Memphis" />
+                    <Field label="ZIP" value={form.zip} onChange={v => set('zip', v)} placeholder="38104" />
+                  </div>
+                  {form.address && (
+                    <p style={{ fontSize: 11, color: 'var(--mute)', marginTop: -8 }}>✓ Address saved for next time</p>
+                  )}
                 </CSection>
 
-                <CSection title="Pickup window" num="02">
+                {/* ── 02 Gift toggle ── */}
+                <CSection title="Is this a gift?" num="02">
+                  {/* Toggle */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', padding: '16px 20px', border: `1px solid ${form.isGift ? 'var(--gold)' : 'var(--line)'}`, background: form.isGift ? 'rgba(201,169,97,0.06)' : 'transparent', transition: 'all 180ms' }}>
+                    <span style={{ width: 42, height: 24, borderRadius: 12, background: form.isGift ? 'var(--gold)' : 'var(--line)', position: 'relative', flexShrink: 0, transition: 'background 200ms' }}>
+                      <span style={{ position: 'absolute', top: 3, left: form.isGift ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 200ms', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                    </span>
+                    <input type="checkbox" checked={form.isGift} onChange={e => set('isGift', e.target.checked)} style={{ display: 'none' }} />
+                    <div>
+                      <div style={{ fontFamily: 'var(--serif)', fontSize: 17, fontWeight: 500 }}>Buying this as a gift for someone else?</div>
+                      <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 2 }}>We'll coordinate pickup details for the recipient</div>
+                    </div>
+                  </label>
+
+                  {form.isGift && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 4 }}>
+                      {/* Deliver-to selector */}
+                      <div>
+                        <div className="label" style={{ marginBottom: 10 }}>Where should the order go?</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                          {([['friend', '🎁 To my friend', 'Friend picks up or receives the bottle'] as const,
+                             ['me',     '👤 To me first',  'I\'ll hand it off myself'] as const]).map(([val, title, sub]) => (
+                            <label key={val} style={{ cursor: 'pointer', border: `1px solid ${form.giftDeliverTo === val ? 'var(--gold)' : 'var(--line)'}`, padding: '14px 16px', background: form.giftDeliverTo === val ? 'rgba(201,169,97,0.07)' : 'transparent', transition: 'all 180ms' }}>
+                              <input type="radio" name="giftDeliverTo" value={val} checked={form.giftDeliverTo === val} onChange={() => set('giftDeliverTo', val)} style={{ display: 'none' }} />
+                              <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 500 }}>{title}</div>
+                              <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 3 }}>{sub}</div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Recipient details */}
+                      <div style={{ padding: '20px', background: 'var(--cream-2)', border: '1px solid var(--line)' }}>
+                        <div className="eyebrow eyebrow--gold" style={{ marginBottom: 14 }}>
+                          Recipient details {form.giftDeliverTo === 'friend' ? '(required)' : '(optional)'}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                          <div className="checkout-form-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                            <Field
+                              label="Recipient's name"
+                              required={form.giftDeliverTo === 'friend'}
+                              value={form.recipientName}
+                              onChange={v => set('recipientName', v)}
+                              placeholder="Friend's full name"
+                            />
+                            <Field
+                              label="Recipient's phone"
+                              required={form.giftDeliverTo === 'friend'}
+                              value={form.recipientPhone}
+                              onChange={v => set('recipientPhone', v)}
+                              placeholder="901·555·0000"
+                              type="tel"
+                            />
+                          </div>
+                          <Field
+                            label="Recipient's address (optional)"
+                            value={form.recipientAddress}
+                            onChange={v => set('recipientAddress', v)}
+                            placeholder="123 Friend St"
+                          />
+                          <div className="checkout-form-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                            <Field label="City" value={form.recipientCity} onChange={v => set('recipientCity', v)} placeholder="Memphis" />
+                            <Field label="ZIP"  value={form.recipientZip}  onChange={v => set('recipientZip', v)}  placeholder="38104" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Customer's own address — dimmed if delivering to friend */}
+                      {form.giftDeliverTo === 'friend' && (
+                        <div style={{ padding: '14px 16px', border: '1px dashed var(--line)', background: 'transparent', opacity: 0.6 }}>
+                          <div style={{ fontSize: 12, color: 'var(--mute)' }}>
+                            <strong>Your address</strong> — on file{form.address ? `: ${form.address}, ${form.city}` : ' (not required for this order)'}.
+                            {form.address ? '' : ' Edit above if needed.'}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CSection>
+
+                {/* ── 03 Pickup window ── */}
+                <CSection title="Pickup window" num="03">
                   <div className="checkout-window-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     {[['saturday-am','Saturday','10 AM – 1 PM'],['saturday-pm','Saturday','3 PM – 7 PM'],['sunday-pm','Sunday','1 PM – 5 PM'],['weekday-eve','Weekday','Eve · text to confirm']].map(([val,day,time]) => (
                       <label key={val} style={{ cursor: 'pointer', border: '1px solid var(--line)', padding: '14px 16px', display: 'block', borderColor: form.window === val ? 'var(--ink)' : 'var(--line)', background: form.window === val ? 'var(--cream-2)' : 'transparent', minHeight: 72 }}>
-                        <input type="radio" name="window" value={val} checked={form.window === val} onChange={e => setForm(f => ({ ...f, window: e.target.value }))} style={{ display: 'none' }} />
+                        <input type="radio" name="window" value={val} checked={form.window === val} onChange={e => set('window', e.target.value)} style={{ display: 'none' }} />
                         <div className="eyebrow eyebrow--ink">{day}</div>
                         <div style={{ fontFamily: 'var(--serif)', fontSize: 20, marginTop: 4 }}>{time}</div>
                       </label>
@@ -90,11 +221,12 @@ export default function CheckoutPage() {
                   </div>
                 </CSection>
 
-                <CSection title="Payment method" num="03">
+                {/* ── 04 Payment ── */}
+                <CSection title="Payment method" num="04">
                   <div className="checkout-payment-row" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     {[['zelle','Zelle'],['cash','Cash'],['apple','Apple Pay'],['card','Card']].map(([val, label]) => (
                       <label key={val} style={{ cursor: 'pointer', padding: '12px 16px', border: form.payment === val ? '1px solid var(--ink)' : '1px solid var(--line)', background: form.payment === val ? 'var(--ink)' : 'transparent', color: form.payment === val ? 'var(--cream)' : 'var(--ink)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 48, flex: '1 1 100px' }}>
-                        <input type="radio" name="payment" value={val} checked={form.payment === val} onChange={e => setForm(f => ({ ...f, payment: e.target.value }))} style={{ display: 'none' }} />
+                        <input type="radio" name="payment" value={val} checked={form.payment === val} onChange={e => set('payment', e.target.value)} style={{ display: 'none' }} />
                         {label}
                       </label>
                     ))}
@@ -102,15 +234,17 @@ export default function CheckoutPage() {
                   <p style={{ marginTop: 10, fontSize: 12, color: 'var(--mute)' }}>No payment processed online — confirm at pickup.</p>
                 </CSection>
 
-                <CSection title="Anything else?" num="04">
-                  <textarea placeholder="Allergies, sample requests, gift wrap, who you're shopping for…" rows={3} className="field field--boxed"
-                            value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                {/* ── 05 Notes ── */}
+                <CSection title="Anything else?" num="05">
+                  <textarea placeholder="Sample requests, gift wrap, special instructions…" rows={3} className="field field--boxed"
+                            value={form.notes} onChange={e => set('notes', e.target.value)}
                             style={{ resize: 'vertical' }} />
                 </CSection>
 
                 <div className="checkout-submit-row" style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 8 }}>
                   <button type="button" onClick={() => router.push('/shop')} className="btn btn--ghost"><Icon.ArrowL /> Keep shopping</button>
-                  <button type="submit" className="btn btn--primary btn--lg" style={{ flex: 1 }} disabled={!form.name || !form.email || !form.phone}>
+                  <button type="submit" className="btn btn--primary btn--lg" style={{ flex: 1 }}
+                    disabled={!form.name || !form.email || !form.phone || (form.isGift && form.giftDeliverTo === 'friend' && (!form.recipientName || !form.recipientPhone))}>
                     Reserve · ${total.toFixed(0)} <Icon.Arrow />
                   </button>
                 </div>
@@ -126,7 +260,7 @@ export default function CheckoutPage() {
                   {items.map(({ p, qty }) => (
                     <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '48px 1fr auto', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--line-soft)' }}>
                       <div style={{ position: 'relative', width: 48, height: 60, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
-                        <Image src={p.mainImage} alt={p.name} fill sizes="48px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                        <ProductImage src={p.mainImage} alt={p.name} fill sizes="48px" dark={p.tier === 'niche'} />
                       </div>
                       <div>
                         <div className="eyebrow" style={{ fontSize: 10 }}>{p.brand} · ×{qty}</div>

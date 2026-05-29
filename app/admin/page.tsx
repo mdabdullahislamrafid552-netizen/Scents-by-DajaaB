@@ -1,7 +1,8 @@
 'use client';
-import { useState, useReducer, useEffect, useCallback } from 'react';
+import { useState, useReducer, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import ProductImage from '@/components/ProductImage';
 import { PRODUCTS as STATIC_PRODUCTS, Product, SCENT_FAMILIES, BRANDS } from '@/data/products';
 import { Icon } from '@/components/Icons';
 
@@ -189,12 +190,13 @@ function ProductModal({ product, onSave, onClose, mode }:{
     if (!form.name?.trim() || !form.brand?.trim()) { alert('Name and Brand are required.'); return; }
     const slug = form.slug?.trim() || (form.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-');
     const id = form.id?.trim() || `p${Date.now()}`;
-    const imgPath = form.mainImage?.trim() || `/products/${slug}/1.jpeg`;
+    // mainImage stays as-is (data URL or path); empty string → placeholder on storefront
+    const imgPath = form.mainImage?.trim() || '';
     onSave({
       ...form as Product,
       id, slug,
       mainImage: imgPath, image: imgPath,
-      images: form.images?.length ? form.images : [imgPath],
+      images: form.images?.length ? form.images : (imgPath ? [imgPath] : []),
       visual: form.visual ?? { shape:'column', liquid:'#c9a961', cap:'gold', label:form.name??'' },
       notes: form.notes ?? { top:[], middle:[], base:[] },
       blurb: form.blurb ?? '',
@@ -244,7 +246,11 @@ function ProductModal({ product, onSave, onClose, mode }:{
             <MField label="Stock Count" value={String(form.stockCount??10)} onChange={v=>set('stockCount',Number(v)||0)} type="number" placeholder="10" />
             <MField label="Slug (URL)" value={form.slug??''} onChange={v=>set('slug',v)} placeholder="auto-generated" />
           </div>
-          <MField label="Image Path (relative to /public)" value={form.mainImage??''} onChange={v=>set('mainImage',v)} placeholder="/products/slug/1.jpeg" />
+          <ImageUploadZone
+            images={form.images ?? []}
+            mainImage={form.mainImage ?? ''}
+            onChange={(main, imgs) => { set('mainImage', main); set('images', imgs); }}
+          />
           <div>
             <label className="label">Description</label>
             <textarea className="field field--boxed" rows={3} value={form.desc??''} onChange={e=>set('desc',e.target.value)}
@@ -276,6 +282,96 @@ function MField({ label,value,onChange,placeholder,type='text' }:{ label:string;
       <span className="label">{label}</span>
       <input type={type} className="field field--boxed" value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{ fontSize:14 }} />
     </label>
+  );
+}
+
+/* ─── drag-and-drop image upload zone ─── */
+function ImageUploadZone({ images, mainImage, onChange }:{
+  images: string[]; mainImage: string;
+  onChange:(main:string, imgs:string[])=>void;
+}) {
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const readFiles = async (files: FileList | File[]) => {
+    const newUrls: string[] = [];
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) continue;
+      const url = await new Promise<string>(res => {
+        const r = new FileReader();
+        r.onload = e => res(e.target!.result as string);
+        r.readAsDataURL(file);
+      });
+      newUrls.push(url);
+    }
+    const updated = [...images, ...newUrls];
+    onChange(updated[0] ?? '', updated);
+  };
+
+  const remove = (i: number) => {
+    const next = images.filter((_,idx) => idx !== i);
+    onChange(next[0] ?? '', next);
+  };
+
+  const setMain = (i: number) => {
+    const next = [...images];
+    const [picked] = next.splice(i, 1);
+    next.unshift(picked);
+    onChange(next[0], next);
+  };
+
+  return (
+    <div>
+      <span className="label">Product Images</span>
+      {/* Drop zone */}
+      <div
+        onDrop={e => { e.preventDefault(); setDragging(false); readFiles(e.dataTransfer.files); }}
+        onDragOver={e => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onClick={() => inputRef.current?.click()}
+        style={{
+          marginTop:6, border:`2px dashed ${dragging?'var(--gold)':'var(--line)'}`,
+          background: dragging?'rgba(201,169,97,0.07)':'var(--cream-2)',
+          padding:'24px 16px', textAlign:'center', cursor:'pointer',
+          transition:'all 180ms', borderRadius:2,
+        }}
+      >
+        <input ref={inputRef} type="file" multiple accept="image/*" style={{ display:'none' }}
+          onChange={e => e.target.files && readFiles(e.target.files)} />
+        <div style={{ fontSize:13, color: dragging?'var(--gold-deep)':'var(--mute)' }}>
+          {dragging ? '✦ Drop to add' : '↑ Drag images here · or click to browse'}
+        </div>
+        <div style={{ fontSize:11, color:'var(--mute)', marginTop:4 }}>JPG · PNG · WEBP · multiple OK</div>
+      </div>
+
+      {/* Thumbnails */}
+      {images.length > 0 ? (
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:10 }}>
+          {images.map((src, i) => (
+            <div key={i} style={{ position:'relative', width:64, height:80, border: i===0?'2px solid var(--gold)':'1px solid var(--line)', overflow:'hidden', flexShrink:0 }}>
+              <img src={src} alt={`img ${i+1}`} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+              {i === 0 && (
+                <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'var(--gold)', color:'var(--ink)', fontSize:8, textAlign:'center', letterSpacing:'0.1em', padding:'2px 0' }}>MAIN</div>
+              )}
+              {i > 0 && (
+                <button onClick={e=>{ e.stopPropagation(); setMain(i); }}
+                  title="Set as main" style={{ position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.55)', color:'#fff', fontSize:8, padding:'3px 0', cursor:'pointer', letterSpacing:'0.08em' }}>
+                  SET MAIN
+                </button>
+              )}
+              <button onClick={e=>{ e.stopPropagation(); remove(i); }}
+                style={{ position:'absolute', top:-1, right:-1, width:18, height:18, borderRadius:'50%', background:'var(--ink)', color:'var(--cream)', fontSize:11, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', lineHeight:1 }}>
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p style={{ marginTop:8, fontSize:12, color:'var(--mute)', fontStyle:'italic' }}>
+          No images yet — storefront will show a branded placeholder until you add one.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -477,7 +573,7 @@ function Dashboard({ state }:PanelProps) {
               <div key={p.id} style={{ display:'grid',gridTemplateColumns:'22px 44px 1fr auto',gap:10,alignItems:'center' }}>
                 <span style={{ fontFamily:'var(--serif)',fontStyle:'italic',color:'var(--gold-deep)',fontSize:16 }}>0{i+1}</span>
                 <div style={{ position:'relative',width:44,height:54,overflow:'hidden',flexShrink:0,background:p.tier==='niche'?'#0e0e0e':'var(--cream-2)' }}>
-                  <Image src={p.mainImage} alt={p.name} fill sizes="44px" style={{ objectFit:'cover',objectPosition:'center' }}/>
+                  <ProductImage src={p.mainImage} alt={p.name} fill sizes="44px" dark={p.tier==='niche'} />
                 </div>
                 <div style={{ minWidth:0 }}>
                   <div style={{ fontFamily:'var(--serif)',fontSize:15,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{p.name}</div>
@@ -635,7 +731,7 @@ function ProductsPanel({ state, dispatch, toast, setConfirm }:PanelProps) {
                   <td style={{ padding:'12px 20px' }}>
                     <div style={{ display:'flex',gap:10,alignItems:'center' }}>
                       <div style={{ position:'relative',width:36,height:44,overflow:'hidden',flexShrink:0,background:p.tier==='niche'?'#0e0e0e':'var(--cream-2)' }}>
-                        <Image src={p.mainImage} alt={p.name} fill sizes="36px" style={{ objectFit:'cover',objectPosition:'center' }}/>
+                        <ProductImage src={p.mainImage} alt={p.name} fill sizes="36px" dark={p.tier==='niche'} />
                       </div>
                       <div>
                         <div style={{ fontFamily:'var(--serif)',fontSize:15,whiteSpace:'nowrap' }}>{p.name}</div>
@@ -863,17 +959,17 @@ function SettingsPanel({ state, dispatch, toast }:PanelProps) {
   };
   const saveHours = () => {
     dispatch({ type:'UPDATE_SETTINGS', updates:{ hours } });
-    toast('Studio hours saved');
+    toast('Pickup hours saved');
   };
   const updateHour = (i:number, val:string) => setHours(prev=>prev.map((h,idx)=>idx===i?{...h,hours:val}:h));
 
   return (
     <>
-      <AdminHeader title="Settings" subtitle="Studio hours, payment, contact info."/>
+      <AdminHeader title="Settings" subtitle="Pickup hours, payment, contact info."/>
       <div className="admin-settings-grid" style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginTop:24 }}>
-        {/* Studio Hours */}
+        {/* Pickup and Drop-In Hours */}
         <Card>
-          <div className="eyebrow eyebrow--gold">Studio Hours</div>
+          <div className="eyebrow eyebrow--gold">Pickup and Drop-In Hours</div>
           <div style={{ marginTop:18,display:'flex',flexDirection:'column',gap:4 }}>
             {hours.map((h,i)=>(
               <div key={h.day} style={{ display:'flex',alignItems:'center',gap:8,borderBottom:'1px solid var(--line-soft)',padding:'6px 0' }}>
