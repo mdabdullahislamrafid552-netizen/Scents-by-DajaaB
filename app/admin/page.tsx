@@ -3,7 +3,7 @@ import { useState, useReducer, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import ProductImage from '@/components/ProductImage';
-import { PRODUCTS as STATIC_PRODUCTS, Product, SCENT_FAMILIES, BRANDS } from '@/data/products';
+import { PRODUCTS as STATIC_PRODUCTS, Product, BRANDS } from '@/data/products';
 import { Icon } from '@/components/Icons';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -28,6 +28,8 @@ interface StoreSettings {
   hours: StoreHour[];
   paymentZelle: boolean; paymentCash: boolean; paymentApple: boolean;
   paymentCard: boolean; paymentStripe: boolean;
+  paymentCashApp: boolean; cashAppTag: string;
+  paymentPaypal: boolean; paypalEmail: string;
 }
 interface AdminState {
   products: Product[];
@@ -74,6 +76,8 @@ const INITIAL_SETTINGS: StoreSettings = {
     {day:'Sun',hours:'1 PM – 5 PM'},
   ],
   paymentZelle:true, paymentCash:true, paymentApple:true, paymentCard:true, paymentStripe:false,
+  paymentCashApp:true, cashAppTag:'$ScentsByDajaaB',
+  paymentPaypal:true, paypalEmail:'hello@scentsbydajaab.com',
 };
 const INITIAL_STATE: AdminState = {
   products: STATIC_PRODUCTS,
@@ -217,7 +221,7 @@ function ProductModal({ product, onSave, onClose, mode }:{
             <MField label="Product Name *" value={form.name??''} onChange={v=>set('name',v)} placeholder="Baccarat Rouge 540" />
             <MField label="Brand / House *" value={form.brand??''} onChange={v=>set('brand',v)} placeholder="Maison Francis Kurkdjian" />
           </div>
-          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16 }}>
+          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:16 }}>
             <div>
               <label className="label">Tier</label>
               <select className="field field--boxed" value={form.tier??'womens'} onChange={e=>set('tier',e.target.value)} style={{ fontSize:14 }}>
@@ -232,12 +236,6 @@ function ProductModal({ product, onSave, onClose, mode }:{
                 <option value="women">Women</option>
                 <option value="men">Men</option>
                 <option value="unisex">Unisex</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Scent Family</label>
-              <select className="field field--boxed" value={form.family??'Floral'} onChange={e=>set('family',e.target.value)} style={{ fontSize:14 }}>
-                {SCENT_FAMILIES.map(f=><option key={f} value={f}>{f}</option>)}
               </select>
             </div>
           </div>
@@ -952,6 +950,8 @@ function SettingsPanel({ state, dispatch, toast }:PanelProps) {
   const [instagram, setInstagram] = useState(s.instagram);
   const [neighborhood, setNeighborhood] = useState(s.neighborhood);
   const [hours, setHours] = useState<StoreHour[]>(s.hours.map(h=>({...h})));
+  // keep cashAppTag / paypalEmail in sync if settings change externally
+  void s.cashAppTag; void s.paypalEmail;
 
   const saveContact = () => {
     dispatch({ type:'UPDATE_SETTINGS', updates:{ phone,email,instagram,neighborhood } });
@@ -993,31 +993,49 @@ function SettingsPanel({ state, dispatch, toast }:PanelProps) {
           <button className="btn btn--primary btn--sm" style={{ marginTop:16,width:'100%' }} onClick={saveContact}>Save Contact</button>
         </Card>
         {/* Payment */}
-        <Card>
+        <Card style={{ gridColumn:'1 / -1' }}>
           <div className="eyebrow eyebrow--gold">Payment Methods</div>
-          <div style={{ marginTop:18,display:'flex',flexDirection:'column',gap:12 }}>
-            <Toggle label="Zelle accepted" on={s.paymentZelle} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentZelle:v}}); toast('Payment updated'); }}/>
-            <Toggle label="Cash accepted" on={s.paymentCash} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentCash:v}}); toast('Payment updated'); }}/>
-            <Toggle label="Apple Pay accepted" on={s.paymentApple} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentApple:v}}); toast('Payment updated'); }}/>
-            <Toggle label="Card in-person" on={s.paymentCard} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentCard:v}}); toast('Payment updated'); }}/>
-            <Toggle label="Online card (Stripe)" on={s.paymentStripe} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentStripe:v}}); toast('Payment updated'); }}/>
-          </div>
-        </Card>
-        {/* Email templates */}
-        <Card>
-          <div className="eyebrow eyebrow--gold">Email Templates</div>
-          <div style={{ marginTop:18,display:'flex',flexDirection:'column',gap:4,fontSize:14 }}>
-            {['Order confirmation','Pickup window confirmed','Bottle ready for pickup','Order completed · thank you','Welcome to the list'].map(t=>(
-              <div key={t} style={{ display:'flex',justifyContent:'space-between',borderBottom:'1px solid var(--line-soft)',padding:'10px 0',gap:8 }}>
-                <span style={{ flex:1 }}>{t}</span>
-                <button onClick={()=>toast(`Template editor coming soon: "${t}"`, 'info')}
-                  style={{ fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase',color:'var(--gold-deep)',borderBottom:'1px solid var(--gold-deep)',flexShrink:0 }}>Edit</button>
+          <div style={{ marginTop:18,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:20 }}>
+            {/* Standard toggles */}
+            <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
+              <Toggle label="Zelle" on={s.paymentZelle} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentZelle:v}}); toast('Payment updated'); }}/>
+              <Toggle label="Cash (pickup)" on={s.paymentCash} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentCash:v}}); toast('Payment updated'); }}/>
+              <Toggle label="Apple Pay" on={s.paymentApple} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentApple:v}}); toast('Payment updated'); }}/>
+              <Toggle label="Card in-person" on={s.paymentCard} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentCard:v}}); toast('Payment updated'); }}/>
+            </div>
+            {/* Cash App */}
+            <div style={{ padding:'16px',border:'1px solid var(--line)',background:'var(--cream-2)' }}>
+              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>
+                <span style={{ fontWeight:500,fontSize:14 }}>💚 Cash App</span>
+                <Toggle label="" on={s.paymentCashApp} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentCashApp:v}}); toast('Cash App '+(v?'enabled':'disabled')); }}/>
               </div>
-            ))}
+              <CashAppPayPalField label="$Cashtag" value={s.cashAppTag} onSave={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{cashAppTag:v}}); toast('Cashtag saved'); }}/>
+            </div>
+            {/* PayPal */}
+            <div style={{ padding:'16px',border:'1px solid var(--line)',background:'var(--cream-2)' }}>
+              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>
+                <span style={{ fontWeight:500,fontSize:14 }}>🔵 PayPal</span>
+                <Toggle label="" on={s.paymentPaypal} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentPaypal:v}}); toast('PayPal '+(v?'enabled':'disabled')); }}/>
+              </div>
+              <CashAppPayPalField label="PayPal email" value={s.paypalEmail} onSave={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paypalEmail:v}}); toast('PayPal email saved'); }}/>
+            </div>
           </div>
         </Card>
       </div>
     </>
+  );
+}
+function CashAppPayPalField({ label,value,onSave }:{ label:string;value:string;onSave:(v:string)=>void }) {
+  const [v,setV] = useState(value);
+  return (
+    <div>
+      <label className="label" style={{ marginBottom:4 }}>{label}</label>
+      <div style={{ display:'flex',gap:8 }}>
+        <input className="field field--boxed" value={v} onChange={e=>setV(e.target.value)}
+          style={{ flex:1,fontSize:13,padding:'8px 10px' }} placeholder={label}/>
+        <button className="btn btn--primary btn--sm" onClick={()=>onSave(v)}>Save</button>
+      </div>
+    </div>
   );
 }
 function SField({ label,value,onChange }:{ label:string;value:string;onChange:(v:string)=>void }) {

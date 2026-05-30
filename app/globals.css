@@ -249,9 +249,9 @@ input, textarea, select, .field, .field--boxed { font-size: 16px; }
 }
 
 /* ── Header ── */
-.header-inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 18px 32px; gap: 24px; }
+.header-inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 20px 32px; gap: 24px; }
 @media (max-width: 768px) {
-  .header-inner { grid-template-columns: 1fr auto 1fr; padding: 18px 16px; gap: 12px; }
+  .header-inner { grid-template-columns: 1fr auto 1fr; padding: 20px 16px; gap: 12px; }
 }
 
 /* ── Mobile nav drawer ── */
@@ -545,7 +545,7 @@ section, .container, .container--narrow { max-width: 100%; }
 .header            { overflow: visible !important; }
 /* Mobile: large, prominent logo */
 @media (max-width: 768px) {
-  .site-logo { height: 60px !important; width: auto !important; }
+  .site-logo { height: 68px !important; width: auto !important; }
 }
 
 /* ── About page ── */

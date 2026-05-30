@@ -6,7 +6,18 @@ import { PRODUCTS } from '@/data/products';
 import { Icon } from '@/components/Icons';
 import { useCart } from '@/context/CartContext';
 
-const ADDR_KEY = 'sbd-saved-address';
+const ADDR_KEY  = 'sbd-saved-address';
+const ADMIN_KEY = 'sbd-admin-state';
+
+function getPaymentMeta() {
+  try {
+    const s = JSON.parse(localStorage.getItem(ADMIN_KEY) || '{}');
+    return {
+      cashAppTag:  s?.settings?.cashAppTag  || '$ScentsByDajaaB',
+      paypalEmail: s?.settings?.paypalEmail || 'hello@scentsbydajaab.com',
+    };
+  } catch { return { cashAppTag:'$ScentsByDajaaB', paypalEmail:'hello@scentsbydajaab.com' }; }
+}
 
 type GiftDeliverTo = 'friend' | 'me';
 
@@ -35,8 +46,9 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(cart.length === 0 ? 'empty' : 'details');
   const [form, setForm] = useState<FormState>(BLANK);
   const [confirmed, setConfirmed] = useState<any>(null);
+  const [payMeta, setPayMeta] = useState({ cashAppTag:'$ScentsByDajaaB', paypalEmail:'hello@scentsbydajaab.com' });
 
-  /* load saved address on mount */
+  /* load saved address + payment meta on mount */
   useEffect(() => {
     try {
       const saved = localStorage.getItem(ADDR_KEY);
@@ -45,6 +57,7 @@ export default function CheckoutPage() {
         setForm(f => ({ ...f, name: a.name||'', email: a.email||'', phone: a.phone||'', address: a.address||'', city: a.city||'', zip: a.zip||'' }));
       }
     } catch {}
+    setPayMeta(getPaymentMeta());
   }, []);
 
   const items = cart.map(c => ({ ...c, p: PRODUCTS.find(p => p.id === c.id) })).filter(x => x.p) as { id: string; qty: number; p: typeof PRODUCTS[0] }[];
@@ -223,15 +236,41 @@ export default function CheckoutPage() {
 
                 {/* ── 04 Payment ── */}
                 <CSection title="Payment method" num="04">
-                  <div className="checkout-payment-row" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    {[['zelle','Zelle'],['cash','Cash'],['apple','Apple Pay'],['card','Card']].map(([val, label]) => (
-                      <label key={val} style={{ cursor: 'pointer', padding: '12px 16px', border: form.payment === val ? '1px solid var(--ink)' : '1px solid var(--line)', background: form.payment === val ? 'var(--ink)' : 'transparent', color: form.payment === val ? 'var(--cream)' : 'var(--ink)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 48, flex: '1 1 100px' }}>
+                  <div className="checkout-payment-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
+                    {[
+                      ['zelle',   '⚡ Zelle'],
+                      ['cash',    '💵 Cash'],
+                      ['apple',   ' Apple Pay'],
+                      ['cashapp', '💚 Cash App'],
+                      ['paypal',  '🔵 PayPal'],
+                      ['card',    '💳 Card'],
+                    ].map(([val, label]) => (
+                      <label key={val} style={{ cursor: 'pointer', padding: '12px 10px', border: form.payment === val ? '1px solid var(--ink)' : '1px solid var(--line)', background: form.payment === val ? 'var(--ink)' : 'transparent', color: form.payment === val ? 'var(--cream)' : 'var(--ink)', fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: 52, transition: 'all 160ms' }}>
                         <input type="radio" name="payment" value={val} checked={form.payment === val} onChange={e => set('payment', e.target.value)} style={{ display: 'none' }} />
                         {label}
                       </label>
                     ))}
                   </div>
-                  <p style={{ marginTop: 10, fontSize: 12, color: 'var(--mute)' }}>No payment processed online — confirm at pickup.</p>
+
+                  {/* Cash App info */}
+                  {form.payment === 'cashapp' && (
+                    <div style={{ marginTop: 14, padding: '14px 16px', background: 'var(--cream-2)', border: '1px solid var(--line)' }}>
+                      <div className="eyebrow eyebrow--gold" style={{ marginBottom: 6 }}>Send via Cash App</div>
+                      <div style={{ fontFamily: 'var(--serif)', fontSize: 22 }}>{payMeta.cashAppTag}</div>
+                      <p style={{ fontSize: 12, color: 'var(--mute)', marginTop: 4 }}>Send payment after your reservation is confirmed. Include your order number in the note.</p>
+                    </div>
+                  )}
+
+                  {/* PayPal info */}
+                  {form.payment === 'paypal' && (
+                    <div style={{ marginTop: 14, padding: '14px 16px', background: 'var(--cream-2)', border: '1px solid var(--line)' }}>
+                      <div className="eyebrow eyebrow--gold" style={{ marginBottom: 6 }}>Send via PayPal</div>
+                      <div style={{ fontFamily: 'var(--serif)', fontSize: 22 }}>{payMeta.paypalEmail}</div>
+                      <p style={{ fontSize: 12, color: 'var(--mute)', marginTop: 4 }}>Send as "Friends & Family" after your reservation is confirmed. Include your order number in the note.</p>
+                    </div>
+                  )}
+
+                  <p style={{ marginTop: 10, fontSize: 12, color: 'var(--mute)' }}>No payment processed online — confirm after Dajaa texts you.</p>
                 </CSection>
 
                 {/* ── 05 Notes ── */}
