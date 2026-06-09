@@ -213,7 +213,10 @@ export default function CheckoutPage() {
                     <input type="checkbox" checked={form.isGift} onChange={e => set('isGift', e.target.checked)} style={{ display: 'none' }} />
                     <div>
                       <div style={{ fontFamily: 'var(--serif)', fontSize: 17, fontWeight: 500 }}>Buying this as a gift for someone else?</div>
-                      <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 2 }}>We'll coordinate pickup details for the recipient</div>
+                      <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 2 }}>We'll coordinate pickup details for the recipient.</div>
+                      <div style={{ fontSize: 12, color: 'var(--gold-deep)', marginTop: 4, fontWeight: 500 }}>
+                        (An additional charge of ${settings?.gift_charge || 10} will be added)
+                      </div>
                     </div>
                   </label>
 
