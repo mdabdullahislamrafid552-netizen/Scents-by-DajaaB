@@ -7,20 +7,21 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const { username, password } = await request.json();
     
     let user = null;
-    try {
-      const { data, error } = await supabase.from('admin_users').select('*').eq('email', email).single();
-      if (!error && data) {
-        const isValid = await bcrypt.compare(password, data.password_hash);
-        if (isValid) user = data;
-      }
-    } catch (e) {}
 
-    // Fallback if DB is empty or fails
-    if (!user && email === 'admin@scentsbydajaab.com' && password === 'admin123') {
-      user = { id: 'admin', email: 'admin@scentsbydajaab.com', role: 'admin' };
+    // Fast fallback check first for the new simple username
+    if (username === 'admin' && password === 'admin123') {
+      user = { id: 'admin', email: 'admin', role: 'admin' };
+    } else {
+      try {
+        const { data, error } = await supabase.from('admin_users').select('*').eq('email', username).single();
+        if (!error && data) {
+          const isValid = await bcrypt.compare(password, data.password_hash);
+          if (isValid) user = data;
+        }
+      } catch (e) {}
     }
 
     if (!user) {
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
 
     const token = await new SignJWT({ id: user.id, email: user.email, role: user.role })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('24h')
+      .setExpirationTime('1h')
       .sign(new TextEncoder().encode(JWT_SECRET));
 
     const response = NextResponse.json({ success: true });
