@@ -30,6 +30,7 @@ interface StoreSettings {
   paymentCard: boolean; paymentStripe: boolean;
   paymentCashApp: boolean; cashAppTag: string;
   paymentPaypal: boolean; paypalEmail: string;
+  gift_charge: number;
 }
 interface AdminState {
   products: Product[];
@@ -78,6 +79,7 @@ const INITIAL_SETTINGS: StoreSettings = {
   paymentZelle:true, paymentCash:true, paymentApple:true, paymentCard:true, paymentStripe:false,
   paymentCashApp:true, cashAppTag:'$ScentsByDajaaB',
   paymentPaypal:true, paypalEmail:'hello@scentsbydajaab.com',
+  gift_charge: 10,
 };
 const INITIAL_STATE: AdminState = {
   products: STATIC_PRODUCTS,
@@ -240,9 +242,37 @@ function ProductModal({ product, onSave, onClose, mode }:{
             </div>
           </div>
           <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16 }}>
-            <MField label="Price ($)" value={String(form.price??75)} onChange={v=>set('price',Number(v)||0)} type="number" placeholder="75" />
+            <MField label="Default Price ($)" value={String(form.price??75)} onChange={v=>set('price',Number(v)||0)} type="number" placeholder="75" />
             <MField label="Stock Count" value={String(form.stockCount??10)} onChange={v=>set('stockCount',Number(v)||0)} type="number" placeholder="10" />
             <MField label="Slug (URL)" value={form.slug??''} onChange={v=>set('slug',v)} placeholder="auto-generated" />
+          </div>
+          {/* Sizes & Pricing */}
+          <div style={{ border: '1px solid var(--line)', padding: 16, background: 'var(--cream-2)' }}>
+            <label className="eyebrow eyebrow--gold" style={{ marginBottom: 12, display: 'block' }}>Sizes & Pricing</label>
+            {(typeof form.sizes === 'string' ? JSON.parse(form.sizes || '[]') : (form.sizes || [])).map((s:any, i:number) => (
+              <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                <input className="field field--boxed" style={{ flex: 1, fontSize: 13 }} placeholder="Size (e.g. 50ml)" value={s.size} onChange={e => {
+                  const arr = [...(typeof form.sizes === 'string' ? JSON.parse(form.sizes || '[]') : (form.sizes || []))];
+                  arr[i].size = e.target.value;
+                  set('sizes', JSON.stringify(arr));
+                }} />
+                <input className="field field--boxed" style={{ width: 100, fontSize: 13 }} placeholder="Price ($)" type="number" value={s.price} onChange={e => {
+                  const arr = [...(typeof form.sizes === 'string' ? JSON.parse(form.sizes || '[]') : (form.sizes || []))];
+                  arr[i].price = Number(e.target.value) || 0;
+                  set('sizes', JSON.stringify(arr));
+                }} />
+                <button type="button" className="btn btn--ghost" style={{ padding: '0 12px' }} onClick={() => {
+                  const arr = [...(typeof form.sizes === 'string' ? JSON.parse(form.sizes || '[]') : (form.sizes || []))];
+                  arr.splice(i, 1);
+                  set('sizes', JSON.stringify(arr));
+                }}><Icon.Close /></button>
+              </div>
+            ))}
+            <button type="button" className="btn btn--primary btn--sm" style={{ marginTop: 8 }} onClick={() => {
+              const arr = [...(typeof form.sizes === 'string' ? JSON.parse(form.sizes || '[]') : (form.sizes || []))];
+              arr.push({ size: '', price: 0 });
+              set('sizes', JSON.stringify(arr));
+            }}><Icon.Plus /> Add another size</button>
           </div>
           <ImageUploadZone
             images={form.images ?? []}
@@ -384,16 +414,59 @@ export default function AdminPage() {
   const { toasts, show: toast } = useToast();
   const [confirm, setConfirm] = useState<{msg:string;onConfirm:()=>void}|null>(null);
 
-  // Persist to localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('sbd-admin-state');
-      if (saved) dispatch({ type:'LOAD', state: JSON.parse(saved) });
-    } catch {}
+    async function loadData() {
+      try {
+        const [pRes, oRes, cRes, sRes] = await Promise.all([
+          fetch('/api/products'),
+          fetch('/api/orders'),
+          fetch('/api/customers'),
+          fetch('/api/settings')
+        ]);
+        const pData = pRes.ok ? await pRes.json() : [];
+        const oData = oRes.ok ? await oRes.json() : [];
+        const cData = cRes.ok ? await cRes.json() : [];
+        const sData = sRes.ok ? await sRes.json() : null;
+        
+        dispatch({ 
+          type: 'LOAD', 
+          state: {
+            ...INITIAL_STATE,
+            products: pData.length ? pData : INITIAL_STATE.products,
+            orders: oData.length ? oData : INITIAL_STATE.orders,
+            customers: cData.length ? cData : INITIAL_STATE.customers,
+            settings: sData ? sData : INITIAL_STATE.settings,
+          } 
+        });
+      } catch (e) {
+        console.error('Failed to load admin data', e);
+      }
+    }
+    loadData();
   }, []);
-  useEffect(() => {
-    try { localStorage.setItem('sbd-admin-state', JSON.stringify(state)); } catch {}
-  }, [state]);
+
+  const customDispatch = async (action: AdminAction) => {
+    dispatch(action);
+    try {
+      if (action.type === 'UPDATE_SETTINGS') {
+        await fetch('/api/settings', { method: 'PUT', body: JSON.stringify(action.updates) });
+      } else if (action.type === 'UPDATE_ORDER') {
+        await fetch('/api/orders', { method: 'PUT', body: JSON.stringify({ id: action.id, status: action.status }) });
+      } else if (action.type === 'ADD_PRODUCT' || action.type === 'EDIT_PRODUCT') {
+        const product = action.type === 'ADD_PRODUCT' ? action.product : state.products.find(p => p.id === action.id);
+        if (product) await fetch('/api/products', { method: 'POST', body: JSON.stringify(action.type === 'EDIT_PRODUCT' ? { ...product, ...action.updates } : product) });
+      } else if (action.type === 'TOGGLE_STOCK') {
+        const product = state.products.find(p => p.id === action.id);
+        if (product) await fetch('/api/products', { method: 'POST', body: JSON.stringify({ ...product, inStock: !product.inStock }) });
+      } else if (action.type === 'DELETE_PRODUCT') {
+        await fetch(`/api/products?id=${action.id}`, { method: 'DELETE' });
+      } else if (action.type === 'DELETE_ORDER') {
+        await fetch(`/api/orders?id=${action.id}`, { method: 'DELETE' });
+      }
+    } catch (e) {
+      console.error('API error:', e);
+    }
+  };
 
   const tabs:[string,string,React.ReactNode][] = [
     ['dashboard','Dashboard',<Icon.Dashboard key="d"/>],
@@ -408,8 +481,10 @@ export default function AdminPage() {
     <>
       <div style={{ display:'flex',alignItems:'center',gap:12,paddingBottom:24,borderBottom:'1px solid rgba(201,169,97,0.2)' }}>
         <div style={{ flex:1, minWidth:0 }}>
-          <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
-            style={{ height:36, width:'auto', objectFit:'contain', display:'block' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span style={{ fontFamily: 'var(--serif)', fontSize: 16, letterSpacing: '0.05em', lineHeight: 1 }}>Scents by</span>
+            <span style={{ fontFamily: 'var(--script)', color: 'var(--gold-deep)', fontSize: 24, lineHeight: 0.8, marginLeft: 12 }}>DajaaB.</span>
+          </div>
           <div className="eyebrow" style={{ color:'var(--gold)',fontSize:9,marginTop:4 }}>Studio Admin</div>
         </div>
         <button onClick={()=>setSidebarOpen(false)} className="admin-topbar-close"
@@ -445,7 +520,7 @@ export default function AdminPage() {
     </>
   );
 
-  const sharedProps = { state, dispatch, toast, setConfirm };
+  const sharedProps = { state, dispatch: customDispatch, toast, setConfirm };
 
   return (
     <div className="admin-layout">
@@ -649,11 +724,17 @@ function OrdersPanel({ state, dispatch, toast, setConfirm }:PanelProps) {
                     <td style={{ padding:'14px 10px' }}>{o.items}</td>
                     <td style={{ padding:'14px 10px',fontFamily:'var(--serif)',fontSize:16 }}>${o.total}</td>
                     <td style={{ padding:'14px 10px' }}><StatusPill status={o.status}/></td>
-                    <td style={{ padding:'14px 10px' }}>
+                    <td style={{ padding:'14px 10px', display: 'flex', gap: 6 }}>
                       {nl&&ns&&(
                         <button onClick={()=>{ dispatch({type:'UPDATE_ORDER',id:o.id,status:ns}); toast(`${o.id} → ${ns}`); }}
                           style={{ fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',border:'1px solid var(--ink)',padding:'6px 10px',whiteSpace:'nowrap',background:'var(--ink)',color:'var(--cream)',minHeight:36 }}>
                           {nl}
+                        </button>
+                      )}
+                      {o.status !== 'completed' && o.status !== 'cancelled' && (
+                        <button onClick={()=>{ setConfirm({ msg:`Cancel order ${o.id}?`, onConfirm:()=>{ dispatch({type:'UPDATE_ORDER',id:o.id,status:'cancelled'}); toast(`Order ${o.id} cancelled`,'info'); }}) }}
+                          style={{ fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',border:'1px solid var(--line)',padding:'6px 10px',whiteSpace:'nowrap',background:'var(--cream)',color:'var(--ink)',minHeight:36 }}>
+                          Cancel
                         </button>
                       )}
                     </td>
@@ -1019,6 +1100,16 @@ function SettingsPanel({ state, dispatch, toast }:PanelProps) {
               </div>
               <CashAppPayPalField label="PayPal email" value={s.paypalEmail} onSave={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paypalEmail:v}}); toast('PayPal email saved'); }}/>
             </div>
+          </div>
+        </Card>
+        {/* Gift Options */}
+        <Card style={{ gridColumn:'1 / -1' }}>
+          <div className="eyebrow eyebrow--gold">Gift Options</div>
+          <div style={{ marginTop:18 }}>
+            <CashAppPayPalField label="Gift Service Charge ($)" value={s.gift_charge?.toString() || '10'} onSave={v=>{ 
+              dispatch({type:'UPDATE_SETTINGS',updates:{gift_charge: Number(v)}}); 
+              toast('Gift charge saved'); 
+            }}/>
           </div>
         </Card>
       </div>

@@ -2,29 +2,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProductImage from '@/components/ProductImage';
-import { PRODUCTS } from '@/data/products';
 import { Icon } from '@/components/Icons';
 import { useCart } from '@/context/CartContext';
+import { useStoreData } from '@/context/StoreDataContext';
 
 const ADDR_KEY  = 'sbd-saved-address';
-const ADMIN_KEY = 'sbd-admin-state';
-
-function getPaymentMeta() {
-  try {
-    const s = JSON.parse(localStorage.getItem(ADMIN_KEY) || '{}');
-    return {
-      cashAppTag:  s?.settings?.cashAppTag  || '$ScentsByDajaaB',
-      paypalEmail: s?.settings?.paypalEmail || 'hello@scentsbydajaab.com',
-    };
-  } catch { return { cashAppTag:'$ScentsByDajaaB', paypalEmail:'hello@scentsbydajaab.com' }; }
-}
 
 type GiftDeliverTo = 'friend' | 'me';
 
 interface FormState {
   name: string; email: string; phone: string;
   address: string; city: string; zip: string;
-  window: string; notes: string; payment: string;
+  pickupDate: string; pickupTime: string; notes: string; payment: string;
   isGift: boolean;
   giftDeliverTo: GiftDeliverTo;
   recipientName: string; recipientPhone: string;
@@ -34,21 +23,31 @@ interface FormState {
 const BLANK: FormState = {
   name: '', email: '', phone: '',
   address: '', city: '', zip: '',
-  window: 'saturday-pm', notes: '', payment: 'zelle',
+  pickupDate: '', pickupTime: '', notes: '', payment: 'zelle',
   isGift: false, giftDeliverTo: 'friend',
   recipientName: '', recipientPhone: '',
   recipientAddress: '', recipientCity: '', recipientZip: '',
 };
 
+const PAYMENT_LABELS: Record<string, string> = {
+  zelle: '⚡ Zelle',
+  cash: '💵 Cash',
+  apple: ' Apple Pay',
+  cashapp: '💚 Cash App',
+  paypal: '🔵 PayPal',
+  card: '💳 Card'
+};
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, setCart } = useCart();
+  const { products: PRODUCTS, settings } = useStoreData();
   const [step, setStep] = useState(cart.length === 0 ? 'empty' : 'details');
   const [form, setForm] = useState<FormState>(BLANK);
   const [confirmed, setConfirmed] = useState<any>(null);
-  const [payMeta, setPayMeta] = useState({ cashAppTag:'$ScentsByDajaaB', paypalEmail:'hello@scentsbydajaab.com' });
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  /* load saved address + payment meta on mount */
+  /* load saved address on mount */
   useEffect(() => {
     try {
       const saved = localStorage.getItem(ADDR_KEY);
@@ -57,11 +56,20 @@ export default function CheckoutPage() {
         setForm(f => ({ ...f, name: a.name||'', email: a.email||'', phone: a.phone||'', address: a.address||'', city: a.city||'', zip: a.zip||'' }));
       }
     } catch {}
-    setPayMeta(getPaymentMeta());
   }, []);
 
-  const items = cart.map(c => ({ ...c, p: PRODUCTS.find(p => p.id === c.id) })).filter(x => x.p) as { id: string; qty: number; p: typeof PRODUCTS[0] }[];
-  const subtotal = items.reduce((s, it) => s + it.p.price * it.qty, 0);
+  const items = cart.map(c => {
+    const p = PRODUCTS.find((p: any) => p.id === c.id);
+    let currentPrice = p?.price || 0;
+    if (c.size && p?.sizes) {
+      const sizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? JSON.parse(p.sizes) : []);
+      const selectedSize = sizes.find((s: any) => s.size === c.size);
+      if (selectedSize) currentPrice = selectedSize.price;
+    }
+    return { ...c, p, currentPrice };
+  }).filter(x => x.p) as { id: string; qty: number; size?: string; currentPrice: number; p: any }[];
+
+  const subtotal = items.reduce((s, it) => s + it.currentPrice * it.qty, 0);
 
   const designerItems = items.filter(it => it.p.tier !== 'niche');
   const designerQty = designerItems.reduce((s, it) => s + it.qty, 0);
@@ -71,29 +79,79 @@ export default function CheckoutPage() {
   const nicheBundles = Math.floor(nicheQty / 2);
   let bundleDiscount = 0;
   if (designerBundles > 0) {
-    const units: number[] = []; designerItems.forEach(it => { for (let i = 0; i < it.qty; i++) units.push(it.p.price); });
+    const units: number[] = []; designerItems.forEach(it => { for (let i = 0; i < it.qty; i++) units.push(it.currentPrice); });
     units.sort((a, b) => b - a);
     bundleDiscount += Math.max(0, units.slice(0, designerBundles * 5).reduce((s, v) => s + v, 0) - designerBundles * 125);
   }
   if (nicheBundles > 0) {
-    const units: number[] = []; nicheItems.forEach(it => { for (let i = 0; i < it.qty; i++) units.push(it.p.price); });
+    const units: number[] = []; nicheItems.forEach(it => { for (let i = 0; i < it.qty; i++) units.push(it.currentPrice); });
     units.sort((a, b) => b - a);
     bundleDiscount += Math.max(0, units.slice(0, nicheBundles * 2).reduce((s, v) => s + v, 0) - nicheBundles * 190);
   }
-  const total = subtotal - bundleDiscount;
+  
+  const giftCharge = form.isGift ? (settings?.gift_charge || 5.00) : 0;
+  const total = subtotal - bundleDiscount + giftCharge;
 
   const set = (k: keyof FormState, v: unknown) => setForm(f => ({ ...f, [k]: v }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    /* persist address for next visit */
+    if (loadingSubmit) return;
+    setLoadingSubmit(true);
+    
     try {
       localStorage.setItem(ADDR_KEY, JSON.stringify({ name: form.name, email: form.email, phone: form.phone, address: form.address, city: form.city, zip: form.zip }));
     } catch {}
-    const orderNum = 'SBD-' + Math.floor(Math.random() * 9000 + 1000);
-    setConfirmed({ num: orderNum, ...form, items: [...items], subtotal, bundleDiscount, total });
-    setCart([]);
-    setStep('done');
+
+    try {
+      const orderNum = 'SBD-' + Math.floor(Math.random() * 9000 + 1000);
+      const payload = {
+        order_number: orderNum,
+        customer_name: form.name,
+        customer_email: form.email,
+        customer_phone: form.phone,
+        pickup_address: { street: form.address, city: form.city, zip: form.zip },
+        items: items.map(it => ({
+          product_id: it.p.id,
+          name: it.p.name,
+          qty: it.qty,
+          quantity: it.qty,
+          price: it.currentPrice,
+          size: it.size
+        })),
+        is_gift: form.isGift,
+        gift_charge: giftCharge,
+        recipient_address: form.isGift ? {
+          name: form.recipientName,
+          phone: form.recipientPhone,
+          street: form.recipientAddress,
+          city: form.recipientCity,
+          zip: form.recipientZip,
+          deliver_to: form.giftDeliverTo
+        } : null,
+        desired_pickup_date: form.pickupDate || null,
+        payment_method: form.payment,
+        notes: (form.notes || '') + (form.pickupTime ? `\nPickup Window: ${form.pickupTime}` : ''),
+        subtotal,
+        total
+      };
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to place order');
+
+      setConfirmed({ num: orderNum, ...form, items: [...items], subtotal, bundleDiscount, giftCharge, total });
+      setCart([]);
+      setStep('done');
+    } catch (err: any) {
+      alert(err.message || 'Something went wrong');
+    } finally {
+      setLoadingSubmit(false);
+    }
   };
 
   if (step === 'empty' || (items.length === 0 && step !== 'done')) {
@@ -109,11 +167,14 @@ export default function CheckoutPage() {
 
   if (step === 'done' && confirmed) return <Confirmation order={confirmed} onContinue={() => router.push('/shop')} />;
 
+  const paymentMethods = settings?.payment_methods || ['zelle', 'cash', 'cashapp', 'paypal', 'card', 'apple'];
+  const cashAppTag = settings?.cashapp_tag || '$ScentsByDajaaB';
+  const paypalEmail = settings?.paypal_email || 'hello@scentsbydajaab.com';
+
   return (
     <div className="fade-in">
       <section style={{ padding: '36px 0 80px' }}>
         <div className="container">
-          {/* On mobile: order summary appears ABOVE the form (via CSS order: -1 on the aside) */}
           <div className="checkout-grid">
             {/* ── Form ── */}
             <div>
@@ -143,7 +204,6 @@ export default function CheckoutPage() {
 
                 {/* ── 02 Gift toggle ── */}
                 <CSection title="Is this a gift?" num="02">
-                  {/* Toggle */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', padding: '16px 20px', border: `1px solid ${form.isGift ? 'var(--gold)' : 'var(--line)'}`, background: form.isGift ? 'rgba(201,169,97,0.06)' : 'transparent', transition: 'all 180ms' }}>
                     <span style={{ width: 42, height: 24, borderRadius: 12, background: form.isGift ? 'var(--gold)' : 'var(--line)', position: 'relative', flexShrink: 0, transition: 'background 200ms' }}>
                       <span style={{ position: 'absolute', top: 3, left: form.isGift ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 200ms', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
@@ -157,7 +217,6 @@ export default function CheckoutPage() {
 
                   {form.isGift && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 4 }}>
-                      {/* Deliver-to selector */}
                       <div>
                         <div className="label" style={{ marginBottom: 10 }}>Where should the order go?</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -172,7 +231,6 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
-                      {/* Recipient details */}
                       <div style={{ padding: '20px', background: 'var(--cream-2)', border: '1px solid var(--line)' }}>
                         <div className="eyebrow eyebrow--gold" style={{ marginBottom: 14 }}>
                           Recipient details {form.giftDeliverTo === 'friend' ? '(required)' : '(optional)'}
@@ -208,7 +266,6 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
-                      {/* Customer's own address — dimmed if delivering to friend */}
                       {form.giftDeliverTo === 'friend' && (
                         <div style={{ padding: '14px 16px', border: '1px dashed var(--line)', background: 'transparent', opacity: 0.6 }}>
                           <div style={{ fontSize: 12, color: 'var(--mute)' }}>
@@ -221,51 +278,57 @@ export default function CheckoutPage() {
                   )}
                 </CSection>
 
-                {/* ── 03 Pickup window ── */}
-                <CSection title="Pickup window" num="03">
-                  <div className="checkout-window-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    {[['saturday-am','Saturday','10 AM – 1 PM'],['saturday-pm','Saturday','3 PM – 7 PM'],['sunday-pm','Sunday','1 PM – 5 PM'],['weekday-eve','Weekday','Eve · text to confirm']].map(([val,day,time]) => (
-                      <label key={val} style={{ cursor: 'pointer', border: '1px solid var(--line)', padding: '14px 16px', display: 'block', borderColor: form.window === val ? 'var(--ink)' : 'var(--line)', background: form.window === val ? 'var(--cream-2)' : 'transparent', minHeight: 72 }}>
-                        <input type="radio" name="window" value={val} checked={form.window === val} onChange={e => set('window', e.target.value)} style={{ display: 'none' }} />
-                        <div className="eyebrow eyebrow--ink">{day}</div>
-                        <div style={{ fontFamily: 'var(--serif)', fontSize: 20, marginTop: 4 }}>{time}</div>
-                      </label>
-                    ))}
+                {/* ── 03 Pickup Date & Time ── */}
+                <CSection title="Pickup Calendar" num="03">
+                  <div className="checkout-form-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                    <Field 
+                      label="Desired Pickup Date" 
+                      required 
+                      value={form.pickupDate} 
+                      onChange={v => set('pickupDate', v)} 
+                      type="date" 
+                    />
+                    <Field 
+                      label="Pickup Window (Time)" 
+                      required 
+                      value={form.pickupTime} 
+                      onChange={v => set('pickupTime', v)} 
+                      placeholder="e.g. 1 PM - 3 PM" 
+                    />
                   </div>
+                  {settings?.pickup_dropin_hours && settings.pickup_dropin_hours.length > 0 && (
+                    <div style={{ marginTop: 12, padding: '12px 16px', background: 'var(--cream-2)', border: '1px solid var(--line)', fontSize: 12, color: 'var(--char)' }}>
+                      <strong>Studio Hours:</strong><br />
+                      {settings.pickup_dropin_hours.map((h: any, i: number) => (
+                        <div key={i}>{h.day}: {h.hours}</div>
+                      ))}
+                    </div>
+                  )}
                 </CSection>
 
                 {/* ── 04 Payment ── */}
                 <CSection title="Payment method" num="04">
                   <div className="checkout-payment-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
-                    {[
-                      ['zelle',   '⚡ Zelle'],
-                      ['cash',    '💵 Cash'],
-                      ['apple',   ' Apple Pay'],
-                      ['cashapp', '💚 Cash App'],
-                      ['paypal',  '🔵 PayPal'],
-                      ['card',    '💳 Card'],
-                    ].map(([val, label]) => (
+                    {paymentMethods.map((val: string) => (
                       <label key={val} style={{ cursor: 'pointer', padding: '12px 10px', border: form.payment === val ? '1px solid var(--ink)' : '1px solid var(--line)', background: form.payment === val ? 'var(--ink)' : 'transparent', color: form.payment === val ? 'var(--cream)' : 'var(--ink)', fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: 52, transition: 'all 160ms' }}>
                         <input type="radio" name="payment" value={val} checked={form.payment === val} onChange={e => set('payment', e.target.value)} style={{ display: 'none' }} />
-                        {label}
+                        {PAYMENT_LABELS[val] || val}
                       </label>
                     ))}
                   </div>
 
-                  {/* Cash App info */}
                   {form.payment === 'cashapp' && (
                     <div style={{ marginTop: 14, padding: '14px 16px', background: 'var(--cream-2)', border: '1px solid var(--line)' }}>
                       <div className="eyebrow eyebrow--gold" style={{ marginBottom: 6 }}>Send via Cash App</div>
-                      <div style={{ fontFamily: 'var(--serif)', fontSize: 22 }}>{payMeta.cashAppTag}</div>
+                      <div style={{ fontFamily: 'var(--serif)', fontSize: 22 }}>{cashAppTag}</div>
                       <p style={{ fontSize: 12, color: 'var(--mute)', marginTop: 4 }}>Send payment after your reservation is confirmed. Include your order number in the note.</p>
                     </div>
                   )}
 
-                  {/* PayPal info */}
                   {form.payment === 'paypal' && (
                     <div style={{ marginTop: 14, padding: '14px 16px', background: 'var(--cream-2)', border: '1px solid var(--line)' }}>
                       <div className="eyebrow eyebrow--gold" style={{ marginBottom: 6 }}>Send via PayPal</div>
-                      <div style={{ fontFamily: 'var(--serif)', fontSize: 22 }}>{payMeta.paypalEmail}</div>
+                      <div style={{ fontFamily: 'var(--serif)', fontSize: 22 }}>{paypalEmail}</div>
                       <p style={{ fontSize: 12, color: 'var(--mute)', marginTop: 4 }}>Send as "Friends & Family" after your reservation is confirmed. Include your order number in the note.</p>
                     </div>
                   )}
@@ -283,35 +346,36 @@ export default function CheckoutPage() {
                 <div className="checkout-submit-row" style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 8 }}>
                   <button type="button" onClick={() => router.push('/shop')} className="btn btn--ghost"><Icon.ArrowL /> Keep shopping</button>
                   <button type="submit" className="btn btn--primary btn--lg" style={{ flex: 1 }}
-                    disabled={!form.name || !form.email || !form.phone || (form.isGift && form.giftDeliverTo === 'friend' && (!form.recipientName || !form.recipientPhone))}>
-                    Reserve · ${total.toFixed(0)} <Icon.Arrow />
+                    disabled={loadingSubmit || !form.name || !form.email || !form.phone || (form.isGift && form.giftDeliverTo === 'friend' && (!form.recipientName || !form.recipientPhone)) || !form.pickupDate || !form.pickupTime}>
+                    {loadingSubmit ? 'Processing...' : `Reserve · $${total.toFixed(0)} `} {loadingSubmit ? null : <Icon.Arrow />}
                   </button>
                 </div>
               </form>
             </div>
 
-            {/* ── Order summary (sticky on desktop, above form on mobile) ── */}
+            {/* ── Order summary ── */}
             <aside className="checkout-aside" style={{ position: 'sticky', top: 100, alignSelf: 'start' }}>
               <div style={{ background: 'var(--cream-2)', padding: '24px 24px', border: '1px solid var(--line)' }}>
                 <div className="eyebrow eyebrow--gold">Order summary</div>
                 <h3 style={{ marginTop: 8, fontSize: 'clamp(20px, 3vw, 28px)' }}>{items.length} {items.length === 1 ? 'bottle' : 'bottles'}</h3>
                 <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column' }}>
-                  {items.map(({ p, qty }) => (
-                    <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '48px 1fr auto', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--line-soft)' }}>
+                  {items.map(({ p, qty, size, currentPrice }) => (
+                    <div key={`${p.id}-${size}`} style={{ display: 'grid', gridTemplateColumns: '48px 1fr auto', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--line-soft)' }}>
                       <div style={{ position: 'relative', width: 48, height: 60, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
-                        <ProductImage src={p.mainImage} alt={p.name} fill sizes="48px" dark={p.tier === 'niche'} />
+                        <ProductImage src={p.main_image || p.mainImage} alt={p.name} fill sizes="48px" dark={p.tier === 'niche'} />
                       </div>
                       <div>
                         <div className="eyebrow" style={{ fontSize: 10 }}>{p.brand} · ×{qty}</div>
-                        <div style={{ fontFamily: 'var(--serif)', fontSize: 15 }}>{p.name}</div>
+                        <div style={{ fontFamily: 'var(--serif)', fontSize: 15 }}>{p.name} {size && `(${size})`}</div>
                       </div>
-                      <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 500 }}>${(p.price * qty).toFixed(0)}</div>
+                      <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 500 }}>${(currentPrice * qty).toFixed(0)}</div>
                     </div>
                   ))}
                 </div>
                 <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--mute)' }}>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
                   {bundleDiscount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--gold-deep)' }}><span>✦ Bundle savings</span><span>−${bundleDiscount.toFixed(2)}</span></div>}
+                  {giftCharge > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--gold-deep)' }}><span>🎁 Gift Charge</span><span>+${giftCharge.toFixed(2)}</span></div>}
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--mute)' }}><span>Shipping</span><span style={{ fontStyle: 'italic' }}>Pickup only</span></div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
@@ -372,15 +436,20 @@ function Confirmation({ order, onContinue }: { order: any; onContinue: () => voi
         </p>
         <div style={{ margin: '36px auto 0', background: 'var(--cream)', padding: '24px', border: '1px solid var(--line)', textAlign: 'left' }}>
           <div className="eyebrow eyebrow--ink">Order #{order.num}</div>
-          {order.items.map(({ p, qty }: any) => (
-            <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--line-soft)', gap: 12 }}>
-              <span style={{ fontSize: 14 }}>{p.brand} · {p.name} ×{qty}</span>
+          {order.items.map(({ p, qty, size }: any) => (
+            <div key={`${p.id}-${size}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--line-soft)', gap: 12 }}>
+              <span style={{ fontSize: 14 }}>{p.brand} · {p.name} {size && `(${size})`} ×{qty}</span>
               <span style={{ fontFamily: 'var(--serif)', flexShrink: 0 }}>${(p.price * qty).toFixed(0)}</span>
             </div>
           ))}
           {order.bundleDiscount > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', color: 'var(--gold-deep)' }}>
               <span>Bundle savings</span><span>−${order.bundleDiscount.toFixed(0)}</span>
+            </div>
+          )}
+          {order.giftCharge > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', color: 'var(--gold-deep)' }}>
+              <span>Gift Charge</span><span>+${order.giftCharge.toFixed(0)}</span>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0 0', borderTop: '1px solid var(--ink)', marginTop: 10 }}>

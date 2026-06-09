@@ -61,7 +61,13 @@ export default function ProductCard({ p, addToCart }: Props) {
           <span style={{ color: 'var(--mute)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {p.gender === 'unisex' ? 'Unisex' : p.gender === 'women' ? 'Women' : 'Men'}
           </span>
-          <span className="product-card__price" style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(15px, 3vw, 18px)', fontWeight: 500, flexShrink: 0 }}>${p.price}</span>
+          <span className="product-card__price" style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(15px, 3vw, 18px)', fontWeight: 500, flexShrink: 0 }}>
+            {p.sizes && Array.isArray(p.sizes) && p.sizes.length > 0 
+              ? `From $${Math.min(...p.sizes.map(s => s.price))}` 
+              : p.sizes && typeof p.sizes === 'string' && JSON.parse(p.sizes).length > 0
+                ? `From $${Math.min(...JSON.parse(p.sizes).map((s:any) => s.price))}`
+                : `$${p.price}`}
+          </span>
         </div>
         <button onClick={e => { e.stopPropagation(); addToCart(p.id); }}
                 className="btn btn--ghost"

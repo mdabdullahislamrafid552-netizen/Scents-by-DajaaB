@@ -1,12 +1,13 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { PRODUCTS } from '@/data/products';
+import { useStoreData } from '@/context/StoreDataContext';
 import { Icon } from '@/components/Icons';
 
 export default function AboutPage() {
   const router = useRouter();
-  const ed = PRODUCTS.find(p => p.slug === 'creed-aventus')!;
+  const { products: PRODUCTS } = useStoreData();
+  const ed = PRODUCTS.find((p: any) => p.slug === 'creed-aventus');
   return (
     <div className="fade-in">
       <section style={{ padding: 'clamp(48px, 8vw, 80px) 0 clamp(40px, 6vw, 60px)' }}>
@@ -26,18 +27,16 @@ export default function AboutPage() {
                 <a href="https://instagram.com" className="btn btn--ghost"><Icon.IG /> @scentsbydajaab</a>
               </div>
             </div>
-            <div style={{ position: 'relative', aspectRatio: '4/5', overflow: 'hidden', background: '#0e0e0e' }}>
-              <Image
-                src={ed.mainImage}
-                alt={ed.name}
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 45vw"
-                style={{ objectFit: 'cover', objectPosition: 'center' }}
-              />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.5) 100%)', zIndex: 1 }} />
-              <div style={{ position: 'absolute', left: 24, bottom: 24, zIndex: 2, color: 'var(--gold)', fontFamily: 'var(--script)', fontSize: 48, lineHeight: 1 }}>Sd.</div>
-            </div>
+            {ed && (
+              <div style={{ position: 'relative', minHeight: 480, overflow: 'hidden', background: '#0e0e0e' }}>
+                <Image src={ed.main_image || ed.mainImage} alt="The Memphis Studio" fill style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.85 }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />
+                <div style={{ position: 'absolute', bottom: 32, left: 32, right: 32 }}>
+                  <div className="eyebrow eyebrow--gold">The Studio</div>
+                  <h3 style={{ color: 'var(--cream)', fontSize: 28, marginTop: 8 }}>Ready for pickup today.</h3>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

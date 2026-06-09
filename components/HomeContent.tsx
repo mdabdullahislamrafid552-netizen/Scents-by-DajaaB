@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import ProductImage from '@/components/ProductImage';
-import { PRODUCTS } from '@/data/products';
+import { useStoreData } from '@/context/StoreDataContext';
 import { Icon } from '@/components/Icons';
 import ProductCard from '@/components/ProductCard';
 import { useCart } from '@/context/CartContext';
@@ -10,10 +10,14 @@ import { useCart } from '@/context/CartContext';
 export default function HomeContent() {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { products: PRODUCTS, loading } = useStoreData();
+
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}>Loading...</div>;
+
   const featured = PRODUCTS.filter(p => p.featured);
   const bestSellers = [...featured, ...PRODUCTS.filter(p => !p.featured).slice(0, Math.max(0, 8 - featured.length))].slice(0, 8);
   const niche = PRODUCTS.filter(p => p.tier === 'niche').slice(0, 4);
-  const editorPick = PRODUCTS.find(p => p.slug === 'baccarat-rouge-540')!;
+  const editorPick = PRODUCTS.find(p => p.slug === 'baccarat-rouge-540');
 
   return (
     <div className="fade-in">
@@ -241,6 +245,7 @@ function BundleBanner({ kind, count, price, title, tag, subtitle, picks, onClick
   kind: string; count: number; price: number; title: string; tag: string; subtitle: string;
   picks: string[]; onClick: () => void; dark?: boolean;
 }) {
+  const { products: PRODUCTS } = useStoreData();
   const items = picks.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean) as typeof PRODUCTS;
   return (
     <div style={{

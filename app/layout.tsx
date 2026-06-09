@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
+import { StoreDataProvider } from "@/context/StoreDataContext";
 
 export const metadata: Metadata = {
   title: "Scents by DajaaB · All Premium Scents · Memphis",
@@ -21,9 +22,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=Pinyon+Script&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <CartProvider>
-          {children}
-        </CartProvider>
+        <StoreDataProvider>
+          <CartProvider>
+            {children}
+          </CartProvider>
+        </StoreDataProvider>
       </body>
     </html>
   );

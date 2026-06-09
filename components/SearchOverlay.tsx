@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { PRODUCTS } from '@/data/products';
+import { useStoreData } from '@/context/StoreDataContext';
 import { Icon } from './Icons';
 
 interface Props { open: boolean; onClose: () => void; }
@@ -11,15 +11,16 @@ export default function SearchOverlay({ open, onClose }: Props) {
   const [q, setQ] = useState('');
   const ref = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { products: PRODUCTS } = useStoreData();
 
   useEffect(() => { if (open) setTimeout(() => ref.current?.focus(), 50); else setQ(''); }, [open]);
 
   const ql = q.trim().toLowerCase();
   const results = ql.length > 0
-    ? PRODUCTS.filter(p =>
+    ? PRODUCTS.filter((p: any) =>
         p.name.toLowerCase().includes(ql) ||
         p.brand.toLowerCase().includes(ql) ||
-        [...p.notes.top, ...p.notes.middle, ...p.notes.base].some(n => n.toLowerCase().includes(ql))
+        (p.notes && [...(p.notes.top || []), ...(p.notes.middle || []), ...(p.notes.base || [])].some(n => n.toLowerCase().includes(ql)))
       ).slice(0, 8)
     : [];
 
@@ -29,8 +30,10 @@ export default function SearchOverlay({ open, onClose }: Props) {
     <div className={`search-overlay ${open ? 'open' : ''}`}>
       <div className="container" style={{ paddingTop: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
-            style={{ height: 44, width: 'auto', objectFit: 'contain', display: 'block' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span style={{ fontFamily: 'var(--serif)', fontSize: 20, letterSpacing: '0.05em', lineHeight: 1 }}>Scents by</span>
+            <span style={{ fontFamily: 'var(--script)', color: 'var(--gold-deep)', fontSize: 28, lineHeight: 0.8, marginLeft: 16 }}>DajaaB.</span>
+          </div>
           <button onClick={onClose}><Icon.Close /></button>
         </div>
         <div style={{ marginTop: 80, maxWidth: 800, margin: '80px auto 0' }}>

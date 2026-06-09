@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { PRODUCTS } from '@/data/products';
+import { useStoreData } from '@/context/StoreDataContext';
 import { Icon } from '@/components/Icons';
 import { useCart } from '@/context/CartContext';
 
@@ -11,9 +11,10 @@ const FALLBACK = '/file.svg';
 export default function BundlesPage() {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { products: PRODUCTS } = useStoreData();
   const [mode, setMode] = useState<'designer' | 'niche'>('designer');
-  const designer = PRODUCTS.filter(p => p.tier !== 'niche');
-  const niche = PRODUCTS.filter(p => p.tier === 'niche');
+  const designer = PRODUCTS.filter((p: any) => p.tier !== 'niche');
+  const niche = PRODUCTS.filter((p: any) => p.tier === 'niche');
   const pool = mode === 'designer' ? designer : niche;
   const cap = mode === 'designer' ? 5 : 2;
   const price = mode === 'designer' ? 125 : 190;
@@ -31,7 +32,12 @@ export default function BundlesPage() {
 
   const addBundle = () => {
     if (picks.length !== cap) return;
-    picks.forEach(id => addToCart(id, 1));
+    picks.forEach(id => {
+      const p = PRODUCTS.find((x: any) => x.id === id);
+      const sizes = Array.isArray(p?.sizes) ? p.sizes : (typeof p?.sizes === 'string' ? JSON.parse(p.sizes) : []);
+      const size = sizes[0]?.size;
+      addToCart(id, 1, size);
+    });
     router.push('/checkout');
   };
 

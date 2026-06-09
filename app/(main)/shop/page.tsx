@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PRODUCTS, BRANDS } from '@/data/products';
+import { useStoreData } from '@/context/StoreDataContext';
 import { Icon } from '@/components/Icons';
 import ProductCard from '@/components/ProductCard';
 import { useCart } from '@/context/CartContext';
@@ -11,7 +11,12 @@ function ShopContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addToCart } = useCart();
+  const { products: PRODUCTS, loading } = useStoreData();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  
+  const BRANDS = useMemo(() => Array.from(new Set(PRODUCTS.map((p: any) => p.brand))), [PRODUCTS]);
+
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}>Loading...</div>;
 
   const [filters, setFilters] = useState({
     tier: searchParams.get('tier') ? [searchParams.get('tier')!] : [],

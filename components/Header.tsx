@@ -63,11 +63,9 @@ export default function Header({ cartCount, openCart, openSearch }: Props) {
           </div>
 
           {/* Center: logo */}
-          <a onClick={() => router.push('/')} style={{ cursor: 'pointer', justifySelf: 'center', display: 'flex', alignItems: 'center' }}>
-            <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
-              className="site-logo"
-              style={{ height: 80, width: 'auto', objectFit: 'contain', display: 'block' }}
-              priority />
+          <a onClick={() => router.push('/')} style={{ cursor: 'pointer', justifySelf: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+            <span style={{ fontFamily: 'var(--serif)', fontSize: 24, letterSpacing: '0.05em', lineHeight: 1 }}>Scents by</span>
+            <span style={{ fontFamily: 'var(--script)', color: 'var(--gold-deep)', fontSize: 36, lineHeight: 0.8, marginLeft: 20 }}>DajaaB.</span>
           </a>
 
           {/* Right: search, account, cart */}
@@ -125,8 +123,10 @@ export default function Header({ cartCount, openCart, openSearch }: Props) {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '16px 24px', borderBottom: '1px solid var(--line)',
         }}>
-          <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
-            style={{ height: 68, width: 'auto', objectFit: 'contain', display: 'block' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span style={{ fontFamily: 'var(--serif)', fontSize: 20, letterSpacing: '0.05em', lineHeight: 1 }}>Scents by</span>
+            <span style={{ fontFamily: 'var(--script)', color: 'var(--gold-deep)', fontSize: 28, lineHeight: 0.8, marginLeft: 16 }}>DajaaB.</span>
+          </div>
           <button onClick={() => setMenuOpen(false)} aria-label="Close menu"
                   style={{ padding: 8, minHeight: 44, minWidth: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon.Close />

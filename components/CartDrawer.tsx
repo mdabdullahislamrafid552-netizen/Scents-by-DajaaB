@@ -1,10 +1,10 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import ProductImage from '@/components/ProductImage';
-import { PRODUCTS } from '@/data/products';
+import { useStoreData } from '@/context/StoreDataContext';
 import { Icon, Monogram } from './Icons';
 
-interface CartItem { id: string; qty: number; }
+interface CartItem { id: string; qty: number; size?: string; }
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -14,8 +14,20 @@ interface Props {
 
 export default function CartDrawer({ open, onClose, cart, setCart }: Props) {
   const router = useRouter();
-  const items = cart.map(c => ({ ...c, p: PRODUCTS.find(p => p.id === c.id) })).filter(x => x.p) as { id: string; qty: number; p: typeof PRODUCTS[0] }[];
-  const subtotal = items.reduce((s, it) => s + it.p.price * it.qty, 0);
+  const { products: PRODUCTS } = useStoreData();
+  
+  const items = cart.map(c => {
+    const p = PRODUCTS.find((p: any) => p.id === c.id);
+    let currentPrice = p?.price || 0;
+    if (c.size && p?.sizes) {
+      const sizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? JSON.parse(p.sizes) : []);
+      const selectedSize = sizes.find((s: any) => s.size === c.size);
+      if (selectedSize) currentPrice = selectedSize.price;
+    }
+    return { ...c, p, currentPrice };
+  }).filter(x => x.p) as { id: string; qty: number; size?: string; currentPrice: number; p: any }[];
+
+  const subtotal = items.reduce((s, it) => s + it.currentPrice * it.qty, 0);
   const count = items.reduce((s, it) => s + it.qty, 0);
 
   const designerItems = items.filter(it => it.p.tier !== 'niche');
@@ -28,13 +40,13 @@ export default function CartDrawer({ open, onClose, cart, setCart }: Props) {
   let bundleDiscount = 0;
   if (designerBundles > 0) {
     const units: number[] = [];
-    designerItems.forEach(it => { for (let i = 0; i < it.qty; i++) units.push(it.p.price); });
+    designerItems.forEach(it => { for (let i = 0; i < it.qty; i++) units.push(it.currentPrice); });
     units.sort((a, b) => b - a);
     bundleDiscount += Math.max(0, units.slice(0, designerBundles * 5).reduce((s, v) => s + v, 0) - designerBundles * 125);
   }
   if (nicheBundles > 0) {
     const units: number[] = [];
-    nicheItems.forEach(it => { for (let i = 0; i < it.qty; i++) units.push(it.p.price); });
+    nicheItems.forEach(it => { for (let i = 0; i < it.qty; i++) units.push(it.currentPrice); });
     units.sort((a, b) => b - a);
     bundleDiscount += Math.max(0, units.slice(0, nicheBundles * 2).reduce((s, v) => s + v, 0) - nicheBundles * 190);
   }
@@ -42,12 +54,12 @@ export default function CartDrawer({ open, onClose, cart, setCart }: Props) {
   const nextDesignerNeeded = designerQty === 0 ? 5 : (5 - (designerQty % 5)) % 5;
   const nextNicheNeeded = nicheQty === 0 ? 2 : (2 - (nicheQty % 2)) % 2;
 
-  const update = (id: string, delta: number) => {
+  const update = (id: string, size: string | undefined, delta: number) => {
     setCart(prev => prev.flatMap(c =>
-      c.id === id ? (c.qty + delta <= 0 ? [] : [{ ...c, qty: c.qty + delta }]) : [c]
+      (c.id === id && c.size === size) ? (c.qty + delta <= 0 ? [] : [{ ...c, qty: c.qty + delta }]) : [c]
     ));
   };
-  const remove = (id: string) => setCart(prev => prev.filter(c => c.id !== id));
+  const remove = (id: string, size: string | undefined) => setCart(prev => prev.filter(c => !(c.id === id && c.size === size)));
 
   return (
     <>
@@ -96,24 +108,25 @@ export default function CartDrawer({ open, onClose, cart, setCart }: Props) {
                       onClick={() => { onClose(); router.push('/shop'); }}>Browse the Shop</button>
             </div>
           )}
-          {items.map(({ p, qty }) => (
-            <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '72px 1fr auto', gap: 16, padding: '16px 0', borderBottom: '1px solid var(--line-soft)' }}>
+          {items.map(({ p, qty, size, currentPrice }) => (
+            <div key={`${p.id}-${size}`} style={{ display: 'grid', gridTemplateColumns: '72px 1fr auto', gap: 16, padding: '16px 0', borderBottom: '1px solid var(--line-soft)' }}>
               <div style={{ position: 'relative', width: 72, height: 90, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
-                <ProductImage src={p.mainImage} alt={p.name} fill sizes="72px" dark={p.tier === 'niche'} />
+                <ProductImage src={p.main_image || p.mainImage} alt={p.name} fill sizes="72px" dark={p.tier === 'niche'} />
               </div>
               <div>
                 <div className="eyebrow" style={{ marginBottom: 4 }}>{p.brand}</div>
                 <div style={{ fontFamily: 'var(--serif)', fontSize: 18, fontWeight: 500 }}>{p.name}</div>
+                {size && <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 4 }}>Size: {size}</div>}
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
-                  <button onClick={() => update(p.id, -1)} style={{ width: 26, height: 26, border: '1px solid var(--line)' }}><Icon.Minus /></button>
+                  <button onClick={() => update(p.id, size, -1)} style={{ width: 26, height: 26, border: '1px solid var(--line)' }}><Icon.Minus /></button>
                   <span style={{ minWidth: 24, textAlign: 'center', fontSize: 13 }}>{qty}</span>
-                  <button onClick={() => update(p.id, +1)} style={{ width: 26, height: 26, border: '1px solid var(--line)' }}><Icon.Plus /></button>
-                  <button onClick={() => remove(p.id)} style={{ marginLeft: 12, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--mute)', textDecoration: 'underline' }}>Remove</button>
+                  <button onClick={() => update(p.id, size, +1)} style={{ width: 26, height: 26, border: '1px solid var(--line)' }}><Icon.Plus /></button>
+                  <button onClick={() => remove(p.id, size)} style={{ marginLeft: 12, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--mute)', textDecoration: 'underline' }}>Remove</button>
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500 }}>${(p.price * qty).toFixed(0)}</div>
-                {qty > 1 && <div style={{ fontSize: 11, color: 'var(--mute)' }}>${p.price} ea</div>}
+                <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500 }}>${(currentPrice * qty).toFixed(0)}</div>
+                {qty > 1 && <div style={{ fontSize: 11, color: 'var(--mute)' }}>${currentPrice} ea</div>}
               </div>
             </div>
           ))}

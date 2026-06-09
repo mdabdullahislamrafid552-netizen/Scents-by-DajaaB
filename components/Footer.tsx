@@ -17,8 +17,10 @@ export default function Footer() {
         {/* Logo + tagline */}
         <div style={{ textAlign: 'center', paddingBottom: 48 }}>
           <div className="eyebrow" style={{ color: 'var(--gold)', marginBottom: 24 }}>✦ All Premium Scents ✦</div>
-          <Image src="/logo.png" alt="Scents by DajaaB" width={560} height={180}
-            style={{ height: 96, width: 'auto', objectFit: 'contain', display: 'inline-block' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontFamily: 'var(--serif)', fontSize: 28, letterSpacing: '0.05em', lineHeight: 1 }}>Scents by</span>
+            <span style={{ fontFamily: 'var(--script)', color: 'var(--gold-deep)', fontSize: 48, lineHeight: 0.8, marginLeft: 24 }}>DajaaB.</span>
+          </div>
         </div>
 
         <div style={{ height: 1, background: 'rgba(201,169,97,0.25)' }} />

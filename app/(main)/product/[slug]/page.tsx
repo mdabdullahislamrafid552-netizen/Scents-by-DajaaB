@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import ProductImage from '@/components/ProductImage';
-import { PRODUCTS, TIERS } from '@/data/products';
+import { TIERS } from '@/data/products';
+import { useStoreData } from '@/context/StoreDataContext';
 import { Icon } from '@/components/Icons';
 import ProductCard from '@/components/ProductCard';
 import { useCart } from '@/context/CartContext';
@@ -11,7 +12,10 @@ export default function ProductPage() {
   const params   = useParams();
   const router   = useRouter();
   const { addToCart } = useCart();
+  const { products: PRODUCTS, loading } = useStoreData();
   const p = PRODUCTS.find(x => x.slug === params.slug);
+
+  if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>Loading...</div>;
 
   if (!p) {
     return (
@@ -27,9 +31,14 @@ export default function ProductPage() {
   const [openAcc, setOpenAcc] = useState('ingredients');
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
 
-  const gallery = p.images.length > 0 ? p.images : [p.mainImage];
+  const sizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? JSON.parse(p.sizes) : []);
+  const [selectedSize, setSelectedSize] = useState(sizes[0] || null);
+
+  const currentPrice = selectedSize ? selectedSize.price : p.price;
+
+  const gallery = p.images && p.images.length > 0 ? p.images : [p.main_image || p.mainImage];
   const totalImgs = gallery.length;
-  const related = PRODUCTS.filter(x => x.id !== p.id && (x.tier === p.tier || x.family === p.family)).slice(0, 4);
+  const related = PRODUCTS.filter((x: any) => x.id !== p.id && x.tier === p.tier).slice(0, 4);
 
   function handleImgError(idx: number) {
     setImgErrors(prev => ({ ...prev, [idx]: true }));
@@ -126,36 +135,60 @@ export default function ProductPage() {
                 ))}
               </h1>
               <div style={{ marginTop: 16, fontFamily: 'var(--serif)', fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 500 }}>
-                ${p.price.toFixed(2)}
+                ${Number(currentPrice).toFixed(2)}
                 <span style={{ fontSize: 12, color: 'var(--mute)', marginLeft: 10, fontFamily: 'var(--sans)' }}>per bottle · Pickup Memphis</span>
               </div>
-              <p style={{ marginTop: 20, fontSize: 16, lineHeight: 1.65, color: 'var(--char)' }}>{p.desc}</p>
+              <p style={{ marginTop: 20, fontSize: 16, lineHeight: 1.65, color: 'var(--char)' }}>{p.description || p.desc}</p>
+              
+              {sizes.length > 0 && (
+                <div style={{ marginTop: 20 }}>
+                  <div className="eyebrow eyebrow--gold" style={{ marginBottom: 10 }}>Select Size</div>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {sizes.map((s: any, i: number) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setSelectedSize(s)}
+                        style={{ 
+                          padding: '10px 16px', 
+                          border: selectedSize?.size === s.size ? '2px solid var(--ink)' : '1px solid var(--line)',
+                          background: selectedSize?.size === s.size ? 'var(--cream-2)' : 'transparent',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {s.size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Scent pyramid */}
-              <div style={{ marginTop: 28, padding: '24px 0', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
-                <div className="eyebrow eyebrow--gold" style={{ marginBottom: 16 }}>The Scent Pyramid</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', rowGap: 14, columnGap: 20, alignItems: 'start' }}>
-                  <PyramidLevel level="Top"   notes={p.notes.top} />
-                  <PyramidLevel level="Heart" notes={p.notes.middle} />
-                  <PyramidLevel level="Base"  notes={p.notes.base} />
+              {p.notes && (
+                <div style={{ marginTop: 28, padding: '24px 0', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
+                  <div className="eyebrow eyebrow--gold" style={{ marginBottom: 16 }}>The Scent Pyramid</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', rowGap: 14, columnGap: 20, alignItems: 'start' }}>
+                    {p.notes.top && <PyramidLevel level="Top"   notes={p.notes.top} />}
+                    {p.notes.middle && <PyramidLevel level="Heart" notes={p.notes.middle} />}
+                    {p.notes.base && <PyramidLevel level="Base"  notes={p.notes.base} />}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Qty + Add to bag */}
               <div style={{ display: 'flex', gap: 12, marginTop: 24, alignItems: 'stretch', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--ink)', flexShrink: 0 }}>
                   <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: 48, height: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon.Minus /></button>
                   <span style={{ width: 36, textAlign: 'center', fontSize: 15 }}>{qty}</span>
-                  <button onClick={() => setQty(q => Math.min(p.stockCount, q + 1))} style={{ width: 48, height: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon.Plus /></button>
+                  <button onClick={() => setQty(q => Math.min(p.stock_count || p.stockCount || 10, q + 1))} style={{ width: 48, height: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon.Plus /></button>
                 </div>
-                <button className="btn btn--primary" style={{ flex: 1, minWidth: 160 }} onClick={() => addToCart(p.id, qty)}>
-                  Add to Bag — ${(p.price * qty).toFixed(0)} <Icon.Arrow />
+                <button className="btn btn--primary" style={{ flex: 1, minWidth: 160 }} onClick={() => addToCart(p.id, qty, selectedSize?.size)}>
+                  Add to Bag — ${(currentPrice * qty).toFixed(0)} <Icon.Arrow />
                 </button>
                 <button className="btn btn--ghost" aria-label="Save" style={{ padding: '0 16px' }}><Icon.Heart /></button>
               </div>
 
               <div style={{ marginTop: 14, display: 'flex', gap: 16, fontSize: 12, color: 'var(--mute)', flexWrap: 'wrap' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon.Check /> {p.stockCount} in stock</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon.Check /> {p.stock_count ?? p.stockCount} in stock</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon.Pin /> Pickup only · Memphis</span>
               </div>
 

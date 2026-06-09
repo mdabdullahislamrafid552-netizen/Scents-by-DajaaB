@@ -2,8 +2,8 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { PRODUCTS } from '@/data/products';
 
-interface CartItem { id: string; qty: number; }
-interface ToastData { id: string; qty: number; }
+interface CartItem { id: string; qty: number; size?: string; }
+interface ToastData { id: string; qty: number; size?: string; }
 
 interface CartContextType {
   cart: CartItem[];
@@ -13,7 +13,7 @@ interface CartContextType {
   searchOpen: boolean;
   setSearchOpen: (v: boolean) => void;
   toast: ToastData | null;
-  addToCart: (id: string, qty?: number) => void;
+  addToCart: (id: string, qty?: number, size?: string) => void;
   cartCount: number;
 }
 
@@ -25,14 +25,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState<ToastData | null>(null);
 
-  const addToCart = (id: string, qty = 1) => {
+  const addToCart = (id: string, qty = 1, size?: string) => {
     setCart(prev => {
-      const exists = prev.find(c => c.id === id);
-      if (exists) return prev.map(c => c.id === id ? { ...c, qty: c.qty + qty } : c);
-      return [...prev, { id, qty }];
+      const exists = prev.find(c => c.id === id && c.size === size);
+      if (exists) return prev.map(c => (c.id === id && c.size === size) ? { ...c, qty: c.qty + qty } : c);
+      return [...prev, { id, qty, size }];
     });
     setDrawerOpen(true);
-    setToast({ id, qty });
+    setToast({ id, qty, size });
     setTimeout(() => setToast(null), 1800);
   };
 
