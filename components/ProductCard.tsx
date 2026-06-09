@@ -20,7 +20,7 @@ export default function ProductCard({ p, addToCart }: Props) {
         background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)',
       }}>
         <ProductImage
-          src={p.mainImage}
+          src={p.main_image || p.mainImage}
           alt={`${p.name} by ${p.brand}`}
           fill
           loading="lazy"

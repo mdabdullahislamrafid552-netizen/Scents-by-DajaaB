@@ -53,7 +53,7 @@ export default function HomeContent() {
             <div style={{ position: 'relative' }}>
               <div className="hero-image-wrap" style={{ position: 'relative', aspectRatio: '4/5', maxWidth: 460, marginLeft: 'auto', overflow: 'hidden', boxShadow: 'var(--shadow-soft)' }}>
                 <Image
-                  src={editorPick.mainImage}
+                  src={editorPick.main_image || editorPick.mainImage}
                   alt={editorPick.name}
                   fill
                   priority
@@ -136,7 +136,7 @@ export default function HomeContent() {
               <a key={p.id} onClick={() => router.push(`/product/${p.slug}`)} className="product-card" style={{ color: 'var(--cream)', cursor: 'pointer' }}>
                 <div className="product-card__media" style={{ position: 'relative', aspectRatio: '4/5', overflow: 'hidden', background: '#0e0e0e', border: '1px solid rgba(201,169,97,0.25)' }}>
                   <ProductImage
-                    src={p.mainImage}
+                    src={p.main_image || p.mainImage}
                     alt={p.name}
                     fill
                     loading="lazy"
@@ -203,14 +203,14 @@ export default function HomeContent() {
             {/* Images — hidden on mobile via CSS */}
             <div className="founder-image-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden' }}>
-                <Image src={PRODUCTS[9].mainImage} alt={PRODUCTS[9].name} fill sizes="20vw" style={{ objectFit: 'cover' }} />
+                <Image src={PRODUCTS[9].main_image || PRODUCTS[9].mainImage} alt={PRODUCTS[9].name} fill sizes="20vw" style={{ objectFit: 'cover' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden' }}>
-                  <Image src={PRODUCTS[2].mainImage} alt={PRODUCTS[2].name} fill sizes="10vw" style={{ objectFit: 'cover' }} />
+                  <Image src={PRODUCTS[2].main_image || PRODUCTS[2].mainImage} alt={PRODUCTS[2].name} fill sizes="10vw" style={{ objectFit: 'cover' }} />
                 </div>
                 <div style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden' }}>
-                  <Image src={PRODUCTS[34].mainImage} alt={PRODUCTS[34].name} fill sizes="10vw" style={{ objectFit: 'cover' }} />
+                  <Image src={PRODUCTS[34].main_image || PRODUCTS[34].mainImage} alt={PRODUCTS[34].name} fill sizes="10vw" style={{ objectFit: 'cover' }} />
                 </div>
               </div>
             </div>
@@ -269,7 +269,7 @@ function BundleBanner({ kind, count, price, title, tag, subtitle, picks, onClick
       <div className="bundle-images" style={{ display: 'flex', gap: 6, height: 110 }}>
         {items.map((p, i) => (
           <div key={p.id} style={{ position: 'relative', width: 60, overflow: 'hidden', transform: `rotate(${(i - items.length / 2) * 3}deg)`, border: `1px solid ${dark ? 'rgba(201,169,97,0.3)' : 'rgba(0,0,0,0.1)'}` }}>
-            <Image src={p.mainImage} alt={p.name} fill sizes="70px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+            <Image src={p.main_image || p.mainImage} alt={p.name} fill sizes="70px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
           </div>
         ))}
       </div>

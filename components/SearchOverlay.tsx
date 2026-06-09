@@ -70,7 +70,7 @@ export default function SearchOverlay({ open, onClose }: Props) {
                   <a key={p.id} onClick={() => { onClose(); router.push(`/product/${p.slug}`); }}
                      style={{ display: 'grid', gridTemplateColumns: '60px 1fr auto', gap: 16, alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--line-soft)', cursor: 'pointer' }}>
                     <div style={{ position: 'relative', width: 60, height: 80, overflow: 'hidden', flexShrink: 0, background: p.tier === 'niche' ? '#0e0e0e' : 'var(--cream-2)' }}>
-                      <Image src={p.mainImage} alt={p.name} fill sizes="60px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                      <Image src={p.main_image || p.mainImage} alt={p.name} fill sizes="60px" style={{ objectFit: 'cover', objectPosition: 'center' }} />
                     </div>
                     <div>
                       <div className="eyebrow">{p.brand}</div>

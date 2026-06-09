@@ -646,7 +646,7 @@ function Dashboard({ state }:PanelProps) {
               <div key={p.id} style={{ display:'grid',gridTemplateColumns:'22px 44px 1fr auto',gap:10,alignItems:'center' }}>
                 <span style={{ fontFamily:'var(--serif)',fontStyle:'italic',color:'var(--gold-deep)',fontSize:16 }}>0{i+1}</span>
                 <div style={{ position:'relative',width:44,height:54,overflow:'hidden',flexShrink:0,background:p.tier==='niche'?'#0e0e0e':'var(--cream-2)' }}>
-                  <ProductImage src={p.mainImage} alt={p.name} fill sizes="44px" dark={p.tier==='niche'} />
+                  <ProductImage src={p.main_image || p.mainImage} alt={p.name} fill sizes="44px" dark={p.tier==='niche'} />
                 </div>
                 <div style={{ minWidth:0 }}>
                   <div style={{ fontFamily:'var(--serif)',fontSize:15,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{p.name}</div>
@@ -810,7 +810,7 @@ function ProductsPanel({ state, dispatch, toast, setConfirm }:PanelProps) {
                   <td style={{ padding:'12px 20px' }}>
                     <div style={{ display:'flex',gap:10,alignItems:'center' }}>
                       <div style={{ position:'relative',width:36,height:44,overflow:'hidden',flexShrink:0,background:p.tier==='niche'?'#0e0e0e':'var(--cream-2)' }}>
-                        <ProductImage src={p.mainImage} alt={p.name} fill sizes="36px" dark={p.tier==='niche'} />
+                        <ProductImage src={p.main_image || p.mainImage} alt={p.name} fill sizes="36px" dark={p.tier==='niche'} />
                       </div>
                       <div>
                         <div style={{ fontFamily:'var(--serif)',fontSize:15,whiteSpace:'nowrap' }}>{p.name}</div>

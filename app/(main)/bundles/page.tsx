@@ -110,7 +110,7 @@ export default function BundlesPage() {
                     {p ? (
                       <>
                         <Image
-                          src={p.mainImage}
+                          src={p.main_image || p.mainImage}
                           alt={p.name}
                           fill
                           sizes="(max-width: 768px) 20vw, 140px"
@@ -183,7 +183,7 @@ export default function BundlesPage() {
                         transition: 'border-color 200ms',
                       }}>
                         <Image
-                          src={p.mainImage}
+                          src={p.main_image || p.mainImage}
                           alt={`${p.name} by ${p.brand}`}
                           fill
                           loading="lazy"
