@@ -28,22 +28,23 @@ export async function POST(request: Request) {
     if (error) throw error;
     
     // Also update/insert customer
-    if (body.customer_email) {
-      const { data: cData } = await supabase.from('customers').select('*').eq('email', body.customer_email).single();
+    if (body.email) {
+      const { data: cData } = await supabase.from('customers').select('*').eq('email', body.email).single();
       if (cData) {
         await supabase.from('customers').update({ 
-          order_count: cData.order_count + 1,
-          total_spent: cData.total_spent + body.total,
-          name: body.customer_name,
-          phone: body.customer_phone
+          orders: (cData.orders || 0) + 1,
+          ltv: (parseFloat(cData.ltv) || 0) + body.total,
+          name: body.customer,
+          phone: body.phone
         }).eq('id', cData.id);
       } else {
         await supabase.from('customers').insert([{
-          name: body.customer_name,
-          email: body.customer_email,
-          phone: body.customer_phone,
-          order_count: 1,
-          total_spent: body.total
+          id: 'cus_' + Date.now(),
+          name: body.customer,
+          email: body.email,
+          phone: body.phone,
+          orders: 1,
+          ltv: body.total
         }]);
       }
     }

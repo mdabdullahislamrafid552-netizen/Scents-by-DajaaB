@@ -104,10 +104,9 @@ export default function CheckoutPage() {
       const orderNum = 'SBD-' + Math.floor(Math.random() * 9000 + 1000);
       const payload = {
         order_number: orderNum,
-        customer_name: form.name,
-        customer_email: form.email,
-        customer_phone: form.phone,
-        pickup_address: { street: form.address, city: form.city, zip: form.zip },
+        customer: form.name,
+        email: form.email,
+        phone: form.phone,
         items: items.map(it => ({
           product_id: it.p.id,
           name: it.p.name,
