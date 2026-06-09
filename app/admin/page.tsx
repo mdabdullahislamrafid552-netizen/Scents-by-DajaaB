@@ -1077,13 +1077,7 @@ function SettingsPanel({ state, dispatch, toast }:PanelProps) {
         <Card style={{ gridColumn:'1 / -1' }}>
           <div className="eyebrow eyebrow--gold">Payment Methods</div>
           <div style={{ marginTop:18,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:20 }}>
-            {/* Standard toggles */}
-            <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
-              <Toggle label="Zelle" on={s.paymentZelle} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentZelle:v}}); toast('Payment updated'); }}/>
-              <Toggle label="Cash (pickup)" on={s.paymentCash} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentCash:v}}); toast('Payment updated'); }}/>
-              <Toggle label="Apple Pay" on={s.paymentApple} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentApple:v}}); toast('Payment updated'); }}/>
-              <Toggle label="Card in-person" on={s.paymentCard} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentCard:v}}); toast('Payment updated'); }}/>
-            </div>
+
             {/* Cash App */}
             <div style={{ padding:'16px',border:'1px solid var(--line)',background:'var(--cream-2)' }}>
               <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>

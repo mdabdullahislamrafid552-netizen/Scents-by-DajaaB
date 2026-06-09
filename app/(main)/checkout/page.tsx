@@ -23,19 +23,15 @@ interface FormState {
 const BLANK: FormState = {
   name: '', email: '', phone: '',
   address: '', city: '', zip: '',
-  pickupDate: '', pickupTime: '', notes: '', payment: 'zelle',
+  pickupDate: '', pickupTime: '', notes: '', payment: 'cashapp',
   isGift: false, giftDeliverTo: 'friend',
   recipientName: '', recipientPhone: '',
   recipientAddress: '', recipientCity: '', recipientZip: '',
 };
 
 const PAYMENT_LABELS: Record<string, string> = {
-  zelle: '⚡ Zelle',
-  cash: '💵 Cash',
-  apple: ' Apple Pay',
   cashapp: '💚 Cash App',
-  paypal: '🔵 PayPal',
-  card: '💳 Card'
+  paypal: '🔵 PayPal'
 };
 
 export default function CheckoutPage() {
@@ -167,7 +163,11 @@ export default function CheckoutPage() {
 
   if (step === 'done' && confirmed) return <Confirmation order={confirmed} onContinue={() => router.push('/shop')} />;
 
-  const paymentMethods = settings?.payment_methods || ['zelle', 'cash', 'cashapp', 'paypal', 'card', 'apple'];
+  const paymentMethods = ['cashapp', 'paypal'].filter(
+    m => (m === 'cashapp' && settings?.paymentCashApp !== false) || 
+         (m === 'paypal' && settings?.paymentPaypal !== false)
+  );
+  if (paymentMethods.length === 0) paymentMethods.push('cashapp'); // fallback
   const cashAppTag = settings?.cashapp_tag || '$ScentsByDajaaB';
   const paypalEmail = settings?.paypal_email || 'hello@scentsbydajaab.com';
 
@@ -181,7 +181,7 @@ export default function CheckoutPage() {
               <div className="eyebrow eyebrow--gold">Reserve for Pickup</div>
               <h1 style={{ marginTop: 10, fontSize: 'clamp(32px, 5vw, 72px)' }}>Tell Dajaa <span className="italic">who's coming.</span></h1>
               <p style={{ color: 'var(--char)', marginTop: 14, maxWidth: 540, fontSize: 15 }}>
-                We hold your bottles for 48 hours. Dajaa will confirm by text within 2 hours and share the studio address + pickup window. Pay on pickup — cash, Zelle, or Apple Pay.
+                We hold your bottles for 48 hours. Dajaa will confirm by text within 2 hours and share the studio address + pickup window. Payment is required via Cash App or PayPal.
               </p>
               <form onSubmit={submit} style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 24 }}>
 
