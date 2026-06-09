@@ -716,9 +716,9 @@ function OrdersPanel({ state, dispatch, toast, setConfirm }:PanelProps) {
                       <div style={{ fontFamily:'var(--serif)',fontSize:16 }}>{o.id}</div>
                       {o.bundle&&<div style={{ fontSize:10,color:'var(--gold-deep)' }}>✦ {o.bundle}</div>}
                     </td>
-                    <td style={{ padding:'14px 10px',whiteSpace:'nowrap' }}>
-                      <div>{o.customer}</div>
-                      {o.notes&&<div style={{ fontSize:10,color:'var(--mute)',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>📝 {o.notes}</div>}
+                    <td style={{ padding:'14px 10px' }}>
+                      <div style={{ whiteSpace: 'nowrap' }}>{o.customer}</div>
+                      {o.notes && <div style={{ fontSize:10,color:'var(--mute)',marginTop:4,whiteSpace:'pre-wrap',lineHeight:1.4 }}>{o.notes}</div>}
                     </td>
                     <td style={{ padding:'14px 10px',whiteSpace:'nowrap',color:'var(--mute)',fontSize:12 }}>{o.phone}</td>
                     <td style={{ padding:'14px 10px' }}>{o.items}</td>
