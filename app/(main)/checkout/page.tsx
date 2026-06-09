@@ -30,6 +30,7 @@ const BLANK: FormState = {
 };
 
 const PAYMENT_LABELS: Record<string, string> = {
+  cash: '💵 Cash',
   cashapp: '💚 Cash App',
   paypal: '🔵 PayPal'
 };
@@ -163,8 +164,9 @@ export default function CheckoutPage() {
 
   if (step === 'done' && confirmed) return <Confirmation order={confirmed} onContinue={() => router.push('/shop')} />;
 
-  const paymentMethods = ['cashapp', 'paypal'].filter(
-    m => (m === 'cashapp' && settings?.paymentCashApp !== false) || 
+  const paymentMethods = ['cash', 'cashapp', 'paypal'].filter(
+    m => (m === 'cash' && settings?.paymentCash !== false) ||
+         (m === 'cashapp' && settings?.paymentCashApp !== false) || 
          (m === 'paypal' && settings?.paymentPaypal !== false)
   );
   if (paymentMethods.length === 0) paymentMethods.push('cashapp'); // fallback
@@ -181,7 +183,7 @@ export default function CheckoutPage() {
               <div className="eyebrow eyebrow--gold">Reserve for Pickup</div>
               <h1 style={{ marginTop: 10, fontSize: 'clamp(32px, 5vw, 72px)' }}>Tell Dajaa <span className="italic">who's coming.</span></h1>
               <p style={{ color: 'var(--char)', marginTop: 14, maxWidth: 540, fontSize: 15 }}>
-                We hold your bottles for 48 hours. Dajaa will confirm by text within 2 hours and share the studio address + pickup window. Payment is required via Cash App or PayPal.
+                We hold your bottles for 48 hours. Dajaa will confirm by text within 2 hours and share the studio address + pickup window. Payment is required via Cash, Cash App, or PayPal.
               </p>
               <form onSubmit={submit} style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 24 }}>
 
