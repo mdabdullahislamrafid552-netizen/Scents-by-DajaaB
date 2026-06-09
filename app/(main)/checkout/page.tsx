@@ -30,9 +30,9 @@ const BLANK: FormState = {
 };
 
 const PAYMENT_LABELS: Record<string, React.ReactNode> = {
-  cash: <div style={{ display:'flex',alignItems:'center',gap:8 }}><span style={{ fontSize:20 }}>💵</span> Cash</div>,
-  cashapp: <div style={{ display:'flex',alignItems:'center',gap:8 }}><img src="/images/cashapp.png" alt="Cash App" width={24} height={24} style={{ borderRadius:4 }}/> Cash App</div>,
-  paypal: <div style={{ display:'flex',alignItems:'center',gap:8 }}><img src="/images/paypal.png" alt="PayPal" width={40} height={24} style={{ objectFit:'contain' }}/> PayPal</div>
+  cash: <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:6 }}><span style={{ fontSize:22,lineHeight:1 }}>💵</span> <span>Cash</span></div>,
+  cashapp: <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:6 }}><img src="/images/cashapp.png" alt="Cash App" width={24} height={24} style={{ borderRadius:4, objectFit:'contain' }}/> <span>Cash App</span></div>,
+  paypal: <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:6 }}><img src="/images/paypal.png" alt="PayPal" width={32} height={24} style={{ objectFit:'contain' }}/> <span>PayPal</span></div>
 };
 
 export default function CheckoutPage() {
@@ -313,9 +313,9 @@ export default function CheckoutPage() {
 
                 {/* ── 04 Payment ── */}
                 <CSection title="Payment method" num="04">
-                  <div className="checkout-payment-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
+                  <div className="checkout-payment-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10 }}>
                     {paymentMethods.map((val: string) => (
-                      <label key={val} style={{ cursor: 'pointer', padding: '12px 10px', border: form.payment === val ? '1px solid var(--ink)' : '1px solid var(--line)', background: form.payment === val ? 'var(--ink)' : 'transparent', color: form.payment === val ? 'var(--cream)' : 'var(--ink)', fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: 52, transition: 'all 160ms' }}>
+                      <label key={val} style={{ cursor: 'pointer', padding: '12px 10px', border: form.payment === val ? '1px solid var(--ink)' : '1px solid var(--line)', background: form.payment === val ? 'var(--ink)' : 'transparent', color: form.payment === val ? 'var(--cream)' : 'var(--ink)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: 72, transition: 'all 160ms' }}>
                         <input type="radio" name="payment" value={val} checked={form.payment === val} onChange={e => set('payment', e.target.value)} style={{ display: 'none' }} />
                         {PAYMENT_LABELS[val] || val}
                       </label>
