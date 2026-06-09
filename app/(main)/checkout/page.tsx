@@ -29,10 +29,10 @@ const BLANK: FormState = {
   recipientAddress: '', recipientCity: '', recipientZip: '',
 };
 
-const PAYMENT_LABELS: Record<string, string> = {
-  cash: '💵 Cash',
-  cashapp: '💚 Cash App',
-  paypal: '🔵 PayPal'
+const PAYMENT_LABELS: Record<string, React.ReactNode> = {
+  cash: <div style={{ display:'flex',alignItems:'center',gap:8 }}><span style={{ fontSize:20 }}>💵</span> Cash</div>,
+  cashapp: <div style={{ display:'flex',alignItems:'center',gap:8 }}><img src="/images/cashapp.png" alt="Cash App" width={24} height={24} style={{ borderRadius:4 }}/> Cash App</div>,
+  paypal: <div style={{ display:'flex',alignItems:'center',gap:8 }}><img src="/images/paypal.png" alt="PayPal" width={40} height={24} style={{ objectFit:'contain' }}/> PayPal</div>
 };
 
 export default function CheckoutPage() {

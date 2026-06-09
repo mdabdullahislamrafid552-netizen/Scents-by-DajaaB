@@ -1085,7 +1085,7 @@ function SettingsPanel({ state, dispatch, toast }:PanelProps) {
             {/* Cash App */}
             <div style={{ padding:'16px',border:'1px solid var(--line)',background:'var(--cream-2)' }}>
               <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>
-                <span style={{ fontWeight:500,fontSize:14 }}>💚 Cash App</span>
+                <div style={{ display:'flex',alignItems:'center',gap:8,fontWeight:500,fontSize:14 }}><img src="/images/cashapp.png" alt="Cash App" width={24} height={24} style={{ borderRadius:4 }}/> Cash App</div>
                 <Toggle label="" on={s.paymentCashApp} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentCashApp:v}}); toast('Cash App '+(v?'enabled':'disabled')); }}/>
               </div>
               <CashAppPayPalField label="$Cashtag" value={s.cashAppTag} onSave={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{cashAppTag:v}}); toast('Cashtag saved'); }}/>
@@ -1093,7 +1093,7 @@ function SettingsPanel({ state, dispatch, toast }:PanelProps) {
             {/* PayPal */}
             <div style={{ padding:'16px',border:'1px solid var(--line)',background:'var(--cream-2)' }}>
               <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>
-                <span style={{ fontWeight:500,fontSize:14 }}>🔵 PayPal</span>
+                <div style={{ display:'flex',alignItems:'center',gap:8,fontWeight:500,fontSize:14 }}><img src="/images/paypal.png" alt="PayPal" width={40} height={24} style={{ objectFit:'contain' }}/> PayPal</div>
                 <Toggle label="" on={s.paymentPaypal} onChange={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paymentPaypal:v}}); toast('PayPal '+(v?'enabled':'disabled')); }}/>
               </div>
               <CashAppPayPalField label="PayPal email" value={s.paypalEmail} onSave={v=>{ dispatch({type:'UPDATE_SETTINGS',updates:{paypalEmail:v}}); toast('PayPal email saved'); }}/>
