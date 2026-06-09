@@ -78,13 +78,6 @@ export default function Header({ cartCount, openCart, openSearch }: Props) {
               <Icon.Search />
             </button>
             <button
-              onClick={() => router.push('/admin')}
-              aria-label="Account"
-              className="desktop-only"
-              style={{ alignItems: 'center', minHeight: 44, minWidth: 44, justifyContent: 'center' }}>
-              <Icon.User />
-            </button>
-            <button
               onClick={openCart}
               aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
               style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', minHeight: 44, minWidth: 44, justifyContent: 'center' }}>
