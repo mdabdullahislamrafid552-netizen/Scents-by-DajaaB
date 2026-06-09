@@ -435,7 +435,7 @@ export default function AdminPage() {
             products: pData.length ? pData : INITIAL_STATE.products,
             orders: oData.length ? oData : INITIAL_STATE.orders,
             customers: cData.length ? cData : INITIAL_STATE.customers,
-            settings: sData ? sData : INITIAL_STATE.settings,
+            settings: sData ? { ...INITIAL_STATE.settings, ...sData } : INITIAL_STATE.settings,
           } 
         });
       } catch (e) {
