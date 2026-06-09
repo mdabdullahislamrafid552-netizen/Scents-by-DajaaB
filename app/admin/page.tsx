@@ -433,8 +433,8 @@ export default function AdminPage() {
           state: {
             ...INITIAL_STATE,
             products: pData.length ? pData : INITIAL_STATE.products,
-            orders: oData.length ? oData : INITIAL_STATE.orders,
-            customers: cData.length ? cData : INITIAL_STATE.customers,
+            orders: oData,
+            customers: cData,
             settings: sData ? { ...INITIAL_STATE.settings, ...sData } : INITIAL_STATE.settings,
           } 
         });
