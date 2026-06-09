@@ -1,23 +1,15 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
-
-export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    const token = request.cookies.get('admin_session')?.value;
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
-
-    try {
-      await jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
-      return NextResponse.next();
-    } catch (error) {
+export function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  
+  // Protect /admin routes (except /admin/login)
+  if (path === '/admin' || (path.startsWith('/admin/') && !path.startsWith('/admin/login'))) {
+    const session = request.cookies.get('admin_session');
+    
+    // If no session cookie, redirect to login
+    if (!session) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
   }
@@ -26,5 +18,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin', '/admin/:path*'],
 };
