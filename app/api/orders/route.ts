@@ -30,6 +30,8 @@ export async function POST(request: Request) {
           await supabase.from('products').update({ stock_count: newStock }).eq('id', item.product_id);
         }
       }
+    }
+    
     // Format extra details into notes for now to prevent crashing
     const extraDetails = `
 Payment: ${body.payment_method}
