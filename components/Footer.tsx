@@ -8,7 +8,7 @@ export default function Footer() {
   const cols = [
     { title: "Shop", items: [["/shop","All Fragrances"],["/shop?tier=niche","Niche & Luxury"],["/shop?tier=womens","Women's"],["/shop?tier=mens","Men's"],["/bundles","Bundle Deals"]] },
     { title: "House", items: [["/about","Our Story"],["/about","Memphis Studio"],["/faq","Pickup & FAQ"],["/faq","Returns"]] },
-    { title: "Reach Dajaa", items: [["/about","Text 901·921·2322"],["/about","Instagram @scentsbydajaab"],["/about","DM for private appointments"]] },
+    { title: "Reach Dajaa", items: [["/contact","Contact Us"],["/contact","Text 901·921·2322"],["/contact","Instagram @scentsbydajaab"]] },
   ];
 
   return (

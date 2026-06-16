@@ -427,6 +427,8 @@ function Field({ label, value, onChange, placeholder, type = 'text', required }:
 }
 
 function Confirmation({ order, onContinue }: { order: any; onContinue: () => void }) {
+  const showCashApp = order.payment === 'cashapp';
+
   return (
     <div className="fade-in" style={{ padding: '48px 0 96px', background: 'var(--cream-2)', minHeight: '60vh' }}>
       <div className="container--narrow" style={{ textAlign: 'center', maxWidth: 600 }}>
@@ -438,8 +440,25 @@ function Confirmation({ order, onContinue }: { order: any; onContinue: () => voi
         <p style={{ color: 'var(--char)', marginTop: 14, fontSize: 16, lineHeight: 1.65 }}>
           Dajaa will text <strong>{order.phone}</strong> within 2 hours to confirm the studio address and your pickup window.
         </p>
+
+        {showCashApp && (
+          <div style={{ marginTop: 32, background: '#00D632', color: '#fff', padding: '32px 24px', borderRadius: 16, textAlign: 'center', boxShadow: '0 8px 24px rgba(0, 214, 50, 0.2)' }}>
+            <div style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, opacity: 0.9 }}>Action Required</div>
+            <h2 style={{ fontSize: 24, marginTop: 8, fontWeight: 700 }}>Complete Your Payment</h2>
+            <p style={{ fontSize: 16, marginTop: 12, opacity: 0.9 }}>
+              Please send exactly <strong>${order.total.toFixed(2)}</strong> via Cash App to secure your reservation.
+            </p>
+            <div style={{ display: 'inline-block', background: '#fff', color: '#00D632', fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 800, padding: '16px 32px', borderRadius: 8, marginTop: 20, letterSpacing: '0.05em' }}>
+              $daja233333
+            </div>
+            <p style={{ fontSize: 14, marginTop: 20, background: 'rgba(0,0,0,0.1)', padding: '12px 16px', borderRadius: 8 }}>
+              <strong>Important:</strong> Include your order number (<strong>#{order.num}</strong>) in the payment note. After paying, please text <strong>901·921·2322</strong> to confirm your payment!
+            </p>
+          </div>
+        )}
+
         <div style={{ margin: '36px auto 0', background: 'var(--cream)', padding: '24px', border: '1px solid var(--line)', textAlign: 'left' }}>
-          <div className="eyebrow eyebrow--ink">Order #{order.num}</div>
+          <div className="eyebrow eyebrow--ink">Order #{order.num} Summary</div>
           {order.items.map(({ p, qty, size }: any) => (
             <div key={`${p.id}-${size}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--line-soft)', gap: 12 }}>
               <span style={{ fontSize: 14 }}>{p.brand} · {p.name} {size && `(${size})`} ×{qty}</span>
@@ -457,10 +476,11 @@ function Confirmation({ order, onContinue }: { order: any; onContinue: () => voi
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0 0', borderTop: '1px solid var(--ink)', marginTop: 10 }}>
-            <span style={{ fontFamily: 'var(--serif)', fontSize: 20 }}>Total at pickup</span>
+            <span style={{ fontFamily: 'var(--serif)', fontSize: 20 }}>Total due</span>
             <span style={{ fontFamily: 'var(--serif)', fontSize: 24, fontWeight: 500 }}>${order.total.toFixed(0)}</span>
           </div>
         </div>
+        
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 32, flexWrap: 'wrap' }}>
           <button className="btn btn--primary" style={{ flex: '1 1 160px' }} onClick={onContinue}>Keep shopping</button>
           <a href="https://instagram.com" className="btn btn--ghost" style={{ flex: '1 1 160px', justifyContent: 'center' }}><Icon.IG /> Follow us</a>
@@ -469,3 +489,4 @@ function Confirmation({ order, onContinue }: { order: any; onContinue: () => voi
     </div>
   );
 }
+
