@@ -1,5 +1,5 @@
 'use client';
-import { useState, useReducer, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useReducer, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import ProductImage from '@/components/ProductImage';
@@ -14,7 +14,7 @@ type CustomerTier = 'VIP' | 'Repeat' | 'First-time';
 
 interface AdminOrder {
   id: string; customer: string; phone: string; email: string;
-  items: number; total: number; status: OrderStatus;
+  items: any[]; itemCount: number; total: number; status: OrderStatus;
   when: string; bundle: string | null; notes: string;
 }
 interface AdminCustomer {
@@ -46,14 +46,14 @@ interface AdminState {
    INITIAL DATA
 ═══════════════════════════════════════════════════════════════ */
 const INITIAL_ORDERS: AdminOrder[] = [
-  { id:'SBD-4291', customer:'Imani Lawson',   phone:'901·555·0107', email:'imani.l@gmail.com',      items:5, total:125, status:'ready',     when:'2 hrs ago',  bundle:'Designer 5', notes:'' },
-  { id:'SBD-4290', customer:'Marcus Henley',  phone:'901·555·0143', email:'mhenley@gmail.com',       items:2, total:190, status:'pending',   when:'3 hrs ago',  bundle:'Niche 2',    notes:'Gift wrap please' },
-  { id:'SBD-4289', customer:'Jada Carter',    phone:'901·555·0125', email:'jadacarter@outlook.com',  items:1, total:245, status:'completed', when:'Yesterday',  bundle:null,          notes:'' },
-  { id:'SBD-4288', customer:'Devon Park',     phone:'901·555·0181', email:'devon.park@me.com',       items:3, total:250, status:'completed', when:'Yesterday',  bundle:null,          notes:'' },
-  { id:'SBD-4287', customer:'Aaliyah Singh',  phone:'901·555·0166', email:'asingh1@gmail.com',       items:5, total:125, status:'completed', when:'2 days ago', bundle:'Designer 5', notes:'' },
-  { id:'SBD-4286', customer:'Camille Brooks', phone:'901·555·0192', email:'c.brooks@gmail.com',      items:1, total:100, status:'completed', when:'2 days ago', bundle:null,          notes:'' },
-  { id:'SBD-4285', customer:'Tasha Williams', phone:'901·555·0148', email:'tasha.w@gmail.com',       items:2, total:190, status:'ready',     when:'3 days ago', bundle:'Niche 2',    notes:'' },
-  { id:'SBD-4284', customer:'Eric Adams',     phone:'901·555·0177', email:'eric.adams.tn@gmail.com', items:1, total:75,  status:'completed', when:'4 days ago', bundle:null,          notes:'' },
+  { id:'SBD-4291', customer:'Imani Lawson',   phone:'901·555·0107', email:'imani.l@gmail.com',      itemCount:5, items:[], total:125, status:'ready',     when:'2 hrs ago',  bundle:'Designer 5', notes:'' },
+  { id:'SBD-4290', customer:'Marcus Henley',  phone:'901·555·0143', email:'mhenley@gmail.com',       itemCount:2, items:[], total:190, status:'pending',   when:'3 hrs ago',  bundle:'Niche 2',    notes:'Gift wrap please' },
+  { id:'SBD-4289', customer:'Jada Carter',    phone:'901·555·0125', email:'jadacarter@outlook.com',  itemCount:1, items:[], total:245, status:'completed', when:'Yesterday',  bundle:null,          notes:'' },
+  { id:'SBD-4288', customer:'Devon Park',     phone:'901·555·0181', email:'devon.park@me.com',       itemCount:3, items:[], total:250, status:'completed', when:'Yesterday',  bundle:null,          notes:'' },
+  { id:'SBD-4287', customer:'Aaliyah Singh',  phone:'901·555·0166', email:'asingh1@gmail.com',       itemCount:5, items:[], total:125, status:'completed', when:'2 days ago', bundle:'Designer 5', notes:'' },
+  { id:'SBD-4286', customer:'Camille Brooks', phone:'901·555·0192', email:'c.brooks@gmail.com',      itemCount:1, items:[], total:100, status:'completed', when:'2 days ago', bundle:null,          notes:'' },
+  { id:'SBD-4285', customer:'Tasha Williams', phone:'901·555·0148', email:'tasha.w@gmail.com',       itemCount:2, items:[], total:190, status:'ready',     when:'3 days ago', bundle:'Niche 2',    notes:'' },
+  { id:'SBD-4284', customer:'Eric Adams',     phone:'901·555·0177', email:'eric.adams.tn@gmail.com', itemCount:1, items:[], total:75,  status:'completed', when:'4 days ago', bundle:null,          notes:'' },
 ];
 const INITIAL_CUSTOMERS: AdminCustomer[] = [
   { id:'c1', name:'Imani Lawson',   email:'imani.l@gmail.com',      phone:'901·555·0107', orders:4, ltv:510, tier:'VIP',        last:'2 hrs ago' },
@@ -668,6 +668,7 @@ function Dashboard({ state }:PanelProps) {
 function OrdersPanel({ state, dispatch, toast, setConfirm }:PanelProps) {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const filtered = state.orders.filter(o=>{
     if (filter!=='all' && o.status!==filter) return false;
     if (search && !o.customer.toLowerCase().includes(search.toLowerCase()) && !o.id.toLowerCase().includes(search.toLowerCase())) return false;
@@ -711,40 +712,72 @@ function OrdersPanel({ state, dispatch, toast, setConfirm }:PanelProps) {
                 const ns = nextStatus[o.status];
                 const nl = nextLabel[o.status];
                 return (
-                  <tr key={o.id} style={{ borderTop:'1px solid var(--line-soft)' }}>
-                    <td style={{ padding:'14px 20px' }}>
-                      <div style={{ fontFamily:'var(--serif)',fontSize:16 }}>{o.id}</div>
-                      {o.bundle&&<div style={{ fontSize:10,color:'var(--gold-deep)' }}>✦ {o.bundle}</div>}
-                    </td>
-                    <td style={{ padding:'14px 10px' }}>
-                      <div style={{ whiteSpace: 'nowrap' }}>{o.customer}</div>
-                      {o.notes && <div style={{ fontSize:10,color:'var(--mute)',marginTop:4,whiteSpace:'pre-wrap',lineHeight:1.4 }}>{o.notes}</div>}
-                    </td>
-                    <td style={{ padding:'14px 10px',whiteSpace:'nowrap',color:'var(--mute)',fontSize:12 }}>{o.phone}</td>
-                    <td style={{ padding:'14px 10px' }}>{o.items}</td>
-                    <td style={{ padding:'14px 10px',fontFamily:'var(--serif)',fontSize:16 }}>${o.total}</td>
-                    <td style={{ padding:'14px 10px' }}><StatusPill status={o.status}/></td>
-                    <td style={{ padding:'14px 10px', display: 'flex', gap: 6 }}>
-                      {nl&&ns&&(
-                        <button onClick={()=>{ dispatch({type:'UPDATE_ORDER',id:o.id,status:ns}); toast(`${o.id} → ${ns}`); }}
-                          style={{ fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',border:'1px solid var(--ink)',padding:'6px 10px',whiteSpace:'nowrap',background:'var(--ink)',color:'var(--cream)',minHeight:36 }}>
-                          {nl}
+                  <React.Fragment key={o.id}>
+                    <tr style={{ borderTop:'1px solid var(--line-soft)', background: expandedId === o.id ? 'var(--cream-2)' : 'transparent' }}>
+                      <td style={{ padding:'14px 20px' }}>
+                        <div style={{ fontFamily:'var(--serif)',fontSize:16 }}>{o.id}</div>
+                        {o.bundle&&<div style={{ fontSize:10,color:'var(--gold-deep)' }}>✦ {o.bundle}</div>}
+                      </td>
+                      <td style={{ padding:'14px 10px' }}>
+                        <div style={{ whiteSpace: 'nowrap' }}>{o.customer}</div>
+                        {o.notes && <div style={{ fontSize:10,color:'var(--mute)',marginTop:4,whiteSpace:'pre-wrap',lineHeight:1.4 }}>{o.notes}</div>}
+                      </td>
+                      <td style={{ padding:'14px 10px',whiteSpace:'nowrap',color:'var(--mute)',fontSize:12 }}>{o.phone}</td>
+                      <td style={{ padding:'14px 10px' }}>
+                        {o.itemCount} items
+                        <button onClick={() => setExpandedId(expandedId === o.id ? null : o.id)} style={{ display: 'block', fontSize: 10, color: 'var(--gold-deep)', textDecoration: 'underline', marginTop: 4, cursor: 'pointer' }}>
+                          {expandedId === o.id ? 'Hide details' : 'View details'}
                         </button>
-                      )}
-                      {o.status !== 'completed' && o.status !== 'cancelled' && (
-                        <button onClick={()=>{ setConfirm({ msg:`Cancel order ${o.id}?`, onConfirm:()=>{ dispatch({type:'UPDATE_ORDER',id:o.id,status:'cancelled'}); toast(`Order ${o.id} cancelled`,'info'); }}) }}
-                          style={{ fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',border:'1px solid var(--line)',padding:'6px 10px',whiteSpace:'nowrap',background:'var(--cream)',color:'var(--ink)',minHeight:36 }}>
-                          Cancel
+                      </td>
+                      <td style={{ padding:'14px 10px',fontFamily:'var(--serif)',fontSize:16 }}>${o.total}</td>
+                      <td style={{ padding:'14px 10px' }}><StatusPill status={o.status}/></td>
+                      <td style={{ padding:'14px 10px', display: 'flex', gap: 6 }}>
+                        {nl&&ns&&(
+                          <button onClick={()=>{ dispatch({type:'UPDATE_ORDER',id:o.id,status:ns}); toast(`${o.id} → ${ns}`); }}
+                            style={{ fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',border:'1px solid var(--ink)',padding:'6px 10px',whiteSpace:'nowrap',background:'var(--ink)',color:'var(--cream)',minHeight:36 }}>
+                            {nl}
+                          </button>
+                        )}
+                        {o.status !== 'completed' && o.status !== 'cancelled' && (
+                          <button onClick={()=>{ setConfirm({ msg:`Cancel order ${o.id}?`, onConfirm:()=>{ dispatch({type:'UPDATE_ORDER',id:o.id,status:'cancelled'}); toast(`Order ${o.id} cancelled`,'info'); }}) }}
+                            style={{ fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',border:'1px solid var(--line)',padding:'6px 10px',whiteSpace:'nowrap',background:'var(--cream)',color:'var(--ink)',minHeight:36 }}>
+                            Cancel
+                          </button>
+                        )}
+                      </td>
+                      <td style={{ padding:'14px 20px',textAlign:'right' }}>
+                        <button onClick={()=>setConfirm({ msg:`Delete order ${o.id} for ${o.customer}? This cannot be undone.`, onConfirm:()=>{ dispatch({type:'DELETE_ORDER',id:o.id}); toast(`Order ${o.id} deleted`,'info'); }})}
+                          style={{ fontSize:11,color:'var(--mute)',padding:'4px',minHeight:36,minWidth:36,display:'inline-flex',alignItems:'center',justifyContent:'center' }}>
+                          <Icon.Close width="12" height="12"/>
                         </button>
-                      )}
-                    </td>
-                    <td style={{ padding:'14px 20px',textAlign:'right' }}>
-                      <button onClick={()=>setConfirm({ msg:`Delete order ${o.id} for ${o.customer}? This cannot be undone.`, onConfirm:()=>{ dispatch({type:'DELETE_ORDER',id:o.id}); toast(`Order ${o.id} deleted`,'info'); }})}
-                        style={{ fontSize:11,color:'var(--mute)',padding:'4px',minHeight:36,minWidth:36,display:'inline-flex',alignItems:'center',justifyContent:'center' }}>
-                        <Icon.Close width="12" height="12"/>
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
+                    {expandedId === o.id && (
+                      <tr style={{ background: 'var(--cream-2)' }}>
+                        <td colSpan={8} style={{ padding: '0 20px 20px 20px' }}>
+                          <div style={{ padding: '16px', background: 'var(--cream)', border: '1px solid var(--line)' }}>
+                            <div className="eyebrow eyebrow--ink" style={{ marginBottom: 12 }}>Ordered Items</div>
+                            {o.items && Array.isArray(o.items) && o.items.length > 0 ? o.items.map((item, idx) => (
+                              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: idx === o.items.length - 1 ? 'none' : '1px solid var(--line-soft)' }}>
+                                <div style={{ width: 44, height: 54, position: 'relative', background: '#0e0e0e', border: '1px solid var(--line)', flexShrink: 0, overflow: 'hidden' }}>
+                                  {item.image && <ProductImage src={item.image} alt={item.name} fill sizes="44px" dark />}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontFamily: 'var(--serif)', fontSize: 15 }}>{item.name} {item.size ? `(${item.size})` : ''}</div>
+                                  <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 2 }}>Qty: {item.quantity || item.qty || 1} × ${item.price}</div>
+                                </div>
+                                <div style={{ fontFamily: 'var(--serif)', fontSize: 16 }}>
+                                  ${((item.quantity || item.qty || 1) * item.price).toFixed(2)}
+                                </div>
+                              </div>
+                            )) : (
+                              <div style={{ color: 'var(--mute)', fontSize: 13, padding: '8px 0' }}>No item details available for this order.</div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </tbody>

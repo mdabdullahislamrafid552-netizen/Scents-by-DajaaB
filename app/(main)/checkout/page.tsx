@@ -113,7 +113,8 @@ export default function CheckoutPage() {
           qty: it.qty,
           quantity: it.qty,
           price: it.currentPrice,
-          size: it.size
+          size: it.size,
+          image: it.p.main_image || it.p.mainImage || it.p.image
         })),
         is_gift: form.isGift,
         gift_charge: giftCharge,

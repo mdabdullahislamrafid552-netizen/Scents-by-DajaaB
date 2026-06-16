@@ -8,7 +8,8 @@ export async function GET() {
   const formattedData = data.map((o: any) => ({
     ...o,
     id: o.order_number || o.id,
-    items: Array.isArray(o.items) ? o.items.reduce((sum: number, item: any) => sum + (item.quantity || item.qty || 1), 0) : 1,
+    itemCount: Array.isArray(o.items) ? o.items.reduce((sum: number, item: any) => sum + (item.quantity || item.qty || 1), 0) : 1,
+    items: o.items,
     when: o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Today',
     bundle: null
   }));
@@ -35,8 +36,7 @@ export async function POST(request: Request) {
     // Format extra details into notes for now to prevent crashing
     const extraDetails = `
 Payment: ${body.payment_method}
-Pickup: ${body.pickup_address?.street}, ${body.pickup_address?.city}
-Date: ${body.desired_pickup_date || 'N/A'}
+Pickup: ${body.desired_pickup_date || 'Not selected'}
 ${body.is_gift ? 'GIFT ORDER' : ''}
     `.trim();
     
